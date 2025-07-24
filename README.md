@@ -1,4 +1,3 @@
-"""
 # 📱 AppBlocker Android App
 
 ## 🚀 Overview
@@ -68,5 +67,3 @@ AppBlocker is a personal-use Android app designed to help you **block distractin
 5. Click the link "Define remote" and choose **GitHub** (you must be signed in).
 6. Enter repository name (e.g., `AppBlocker`), click **Share**.
 7. Done! Project now tracked on GitHub.
-
-"""
