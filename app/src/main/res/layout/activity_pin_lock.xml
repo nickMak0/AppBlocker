@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/pinLockRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="?android:attr/windowBackground">
+
+    <TextView
+        android:id="@+id/pinTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter PIN"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp"
+        android:textColor="@android:color/black" />
+
+    <EditText
+        android:id="@+id/pinEditText"
+    android:layout_width="200dp"
+    android:layout_height="wrap_content"
+    android:inputType="numberPassword"
+    android:maxLength="4"
+    android:hint="Enter PIN"
+    android:textAlignment="center"
+    android:importantForAutofill="no"
+    android:imeOptions="actionDone"
+    android:textSize="18sp"
+    android:background="@android:drawable/edit_text"
+    android:padding="12dp"
+    android:elevation="2dp" />
+
+
+    <Button
+        android:id="@+id/confirmPinButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Confirm"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="@color/purple_500"
+        android:textColor="@android:color/white" />
+
+    <Button
+        android:id="@+id/resetPinButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reset PIN"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        android:textColor="@android:color/holo_red_dark"
+        android:background="@android:color/transparent" />
+
+</LinearLayout>

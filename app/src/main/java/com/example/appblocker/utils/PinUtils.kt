@@ -1,0 +1,36 @@
+package com.example.appblocker.utils
+
+import android.content.Context
+import android.util.Base64
+import java.security.MessageDigest
+
+object PinUtils {
+    private const val PREFS_NAME = "AppBlockerPrefs"
+    private const val PIN_KEY = "pin_code"
+    private const val SETUP_KEY = "pin_setup_done"
+
+    fun isPinSetup(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(SETUP_KEY, false)
+    }
+
+    fun savePin(context: Context, pin: String) {
+        val hashed = hash(pin)
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putString(PIN_KEY, hashed)
+            .putBoolean(SETUP_KEY, true)
+            .apply()
+    }
+
+    fun verifyPin(context: Context, input: String): Boolean {
+        val hashedInput = hash(input)
+        val storedHash = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(PIN_KEY, null)
+        return hashedInput == storedHash
+    }
+
+    private fun hash(pin: String): String {
+        val bytes = MessageDigest.getInstance("SHA-256").digest(pin.toByteArray())
+        return Base64.encodeToString(bytes, Base64.NO_WRAP)
+    }
+}

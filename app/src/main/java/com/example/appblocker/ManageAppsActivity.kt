@@ -1,13 +1,14 @@
-// File: app/src/main/java/com/example/appblocker/ManageAppsActivity.kt
 package com.example.appblocker
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.appblocker.databinding.ActivityManageAppsBinding
+import com.example.appblocker.utils.PinUtils
 
 class ManageAppsActivity : AppCompatActivity() {
 
@@ -23,11 +24,9 @@ class ManageAppsActivity : AppCompatActivity() {
         binding = ActivityManageAppsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Load previously blocked apps
         val blockedApps = sharedPrefs.getStringSet("blockedApps", emptySet())?.toMutableSet()
             ?: mutableSetOf()
 
-        // Get list of user-installed launchable apps
         val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
             .filter { app ->
                 app.flags and ApplicationInfo.FLAG_SYSTEM == 0 &&
@@ -35,22 +34,30 @@ class ManageAppsActivity : AppCompatActivity() {
             }
             .sortedBy { it.loadLabel(packageManager).toString().lowercase() }
 
-        // Setup adapter with toggle logic
         adapter = AppListAdapter(
             context = this,
             apps = installedApps,
             blockedApps = blockedApps
         ) { packageName, isBlocked ->
-            if (isBlocked) {
-                blockedApps.add(packageName)
-            } else {
-                blockedApps.remove(packageName)
-            }
+            if (isBlocked) blockedApps.add(packageName) else blockedApps.remove(packageName)
             sharedPrefs.edit().putStringSet("blockedApps", blockedApps).apply()
         }
 
-        // Bind to RecyclerView
         binding.appsRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.appsRecyclerView.adapter = adapter
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (PinUtils.isPinSetup(this)) {
+            PinLockActivity.launch(this, this)
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == PinLockActivity.PIN_REQUEST_CODE && resultCode != RESULT_OK) {
+            finish()
+        }
     }
 }

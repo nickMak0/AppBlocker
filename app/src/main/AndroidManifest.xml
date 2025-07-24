@@ -6,6 +6,8 @@
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -56,6 +58,10 @@
             </intent-filter>
         </receiver>
         <activity android:name=".ManageAppsActivity" />
+        <activity android:name=".ScheduleSettingsActivity" />
+        <activity
+            android:name=".DashboardActivity"
+            android:exported="false" />
 
 
     </application>

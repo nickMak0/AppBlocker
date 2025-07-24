@@ -6,10 +6,87 @@
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
     <color name="primary">#1E88E5</color>
     <color name="onPrimary">#FFFFFF</color>
     <color name="surface">#F5F5F5</color>
     <color name="onSurface">#212121</color>
+    <!-- Primary Colors -->
+    <color name="primary_button">#6C63FF</color>
+    <color name="accent_color">#FF6B6B</color>
+
+    <!-- Background Colors -->
+    <color name="background_gradient">#F8F9FA</color>
+    <color name="white">#FFFFFF</color>
+    <color name="white_secondary">#E6E6FA</color>
+
+    <!-- Card Colors -->
+    <color name="card_primary">#6C63FF</color>
+    <color name="card_secondary">#4ECDC4</color>
+
+
+
+    <!-- Status Colors -->
+    <color name="success_green">#00B894</color>
+    <color name="warning_orange">#FDCB6E</color>
+    <color name="error_red">#E17055</color>
+
+    <!-- Primary Colors -->
+    <color name="colorPrimary">#6366F1</color>
+    <color name="colorPrimaryVariant">#4F46E5</color>
+    <color name="colorSecondary">#EC4899</color>
+    <color name="colorSecondaryVariant">#DB2777</color>
+
+    <!-- Background Colors -->
+    <color name="colorBackground">#F8FAFC</color>
+    <color name="colorSurface">#FFFFFF</color>
+
+    <!-- Card Backgrounds -->
+    <color name="card_background">#FFFFFF</color>
+    <color name="permission_card_background">#F0FDF4</color>
+    <color name="toggle_card_background">#FFFFFF</color>
+    <color name="stats_card_background">#FEFCE8</color>
+    <color name="icon_background">#EEF2FF</color>
+
+    <!-- Text Colors -->
+    <color name="primary_text">#1E293B</color>
+    <color name="secondary_text">#64748B</color>
+    <color name="permission_text">#166534</color>
+    <color name="toggle_title">#1E293B</color>
+    <color name="toggle_subtitle">#64748B</color>
+    <color name="stats_title">#92400E</color>
+    <color name="stats_number">#A16207</color>
+    <color name="stats_label">#A16207</color>
+
+    <!-- Button Colors -->
+    <color name="dashboard_button">#6366F1</color>
+    <color name="manage_apps_button">#EC4899</color>
+    <color name="schedule_button_background">#FFFFFF</color>
+    <color name="schedule_button_text">#7C3AED</color>
+    <color name="schedule_button_icon">#7C3AED</color>
+    <color name="schedule_button_border">#7C3AED</color>
+    <color name="schedule_button_ripple">#E9D5FF</color>
+    <color name="button_ripple">#FFFFFF</color>
+
+    <!-- Icon Colors -->
+    <color name="permission_icon">#16A34A</color>
+    <color name="toggle_icon">#6366F1</color>
+
+    <!-- Switch Colors -->
+    <color name="switch_thumb">#6366F1</color>
+    <color name="switch_track">#C7D2FE</color>
+
+    <!-- Border Colors -->
+    <color name="permission_border">#22C55E</color>
+    <color name="stats_divider">#A16207</color>
+
+    <!-- Gradient Colors -->
+    <color name="gradient_start">#EEF2FF</color>
+    <color name="gradient_end">#F1F5F9</color>
+    <color name="card_gradient_start">#FFFFFF</color>
+    <color name="card_gradient_end">#F8FAFC</color>
+    <color name="status_gradient_start">#6366F1</color>
+    <color name="status_gradient_end">#8B5CF6</color>
+    <color name="chip_bg_color">#EEEEEE</color>
+    <color name="section_title">#FF3D3D3D</color>
 
 </resources>
