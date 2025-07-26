@@ -20,7 +20,6 @@ import java.util.*
 
 class ScheduleSettingsActivity : AppCompatActivity() {
 
-    private lateinit var backButton: MaterialButton
     private lateinit var cancelButton: MaterialButton
     private lateinit var statusChip: Chip
     private lateinit var recyclerView: RecyclerView
@@ -48,7 +47,6 @@ class ScheduleSettingsActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        backButton = findViewById(R.id.backButton)
         cancelButton = findViewById(R.id.cancelButton)
         statusChip = findViewById(R.id.statusChip)
         recyclerView = findViewById(R.id.timeRangeRecyclerView)
@@ -160,9 +158,7 @@ class ScheduleSettingsActivity : AppCompatActivity() {
             saveSchedule()
         }
 
-        backButton.setOnClickListener {
-            finish()
-        }
+
 
         cancelButton.setOnClickListener {
             finish()

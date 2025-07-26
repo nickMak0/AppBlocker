@@ -1,10 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeWindowStateChanged"
+<accessibility-service android:accessibilityEventTypes="typeWindowStateChanged"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:notificationTimeout="100"
-    android:canRetrieveWindowContent="true"
-    android:accessibilityFlags="flagReportViewIds"
-    android:description="@string/accessibility_service_description"
-    android:settingsActivity=""
-    android:canPerformGestures="false" />
+    android:canRetrieveWindowContent="false"
+    android:description="@string/accessibility_blocker_description"
+    android:settingsActivity="com.example.appblocker.DummySettingsActivity"
+    xmlns:android="http://schemas.android.com/apk/res/android" />

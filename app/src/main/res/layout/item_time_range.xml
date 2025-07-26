@@ -1,68 +1,221 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    card_view:cardCornerRadius="12dp"
-    card_view:cardElevation="4dp"
-    android:foreground="?attr/selectableItemBackground">
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="1dp"
+    app:strokeWidth="1dp"
+    app:strokeColor="#E5E7EB"
+    app:cardBackgroundColor="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:baselineAligned="false"
-        android:divider="?android:attr/dividerHorizontal"
-        android:showDividers="middle"
-        android:dividerPadding="12dp">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <!-- Start Time TextView -->
-        <TextView
-            android:id="@+id/startTimeTextView"
-            android:layout_width="wrap_content"
+        <!-- Header Row with Icon and Remove Button -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Start"
-            android:textSize="16sp"
-            android:textColor="?android:textColorPrimary"
-            android:padding="8dp"
-            android:drawableStart="@android:drawable/ic_lock_idle_alarm"
-            android:drawablePadding="6dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
 
-        <!-- End Time TextView -->
-        <TextView
-            android:id="@+id/endTimeTextView"
-            android:layout_width="wrap_content"
+            <!-- Time Icon -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                app:cardCornerRadius="10dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="#E0E7FF">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:src="@android:drawable/ic_menu_recent_history"
+                    app:tint="#6366F1" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <!-- Status Indicator -->
+            <com.google.android.material.chip.Chip
+                android:id="@+id/statusIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Active"
+                android:textSize="11sp"
+                app:chipBackgroundColor="#D1FAE5"
+                android:textColor="#10B981"
+                app:chipCornerRadius="8dp"
+                app:chipMinHeight="26dp"
+                app:chipStartPadding="8dp"
+                app:chipEndPadding="8dp"
+                android:layout_marginEnd="8dp"
+                tools:text="Active" />
+
+            <!-- Remove Button -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/removeTimeRangeButton"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                app:icon="@android:drawable/ic_menu_delete"
+                app:iconTint="#EF4444"
+                app:iconSize="16dp"
+                android:backgroundTint="#00000000"
+                app:rippleColor="#FEE2E2" />
+
+        </LinearLayout>
+
+        <!-- Time Selection Section -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="End"
-            android:textSize="16sp"
-            android:textColor="?android:textColorPrimary"
-            android:padding="8dp"
-            android:drawableStart="@android:drawable/ic_lock_idle_alarm"
-            android:drawablePadding="6dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackground" />
+            android:orientation="vertical">
 
-        <!-- Spacer -->
-        <View
-            android:layout_weight="1"
-            android:layout_width="0dp"
-            android:layout_height="1dp" />
+            <!-- Time Range Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
-        <!-- Delete Button -->
-        <ImageButton
-            android:id="@+id/removeTimeRangeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_menu_delete"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Delete time range"
-            android:tint="@android:color/holo_red_dark" />
+                <!-- Start Time Button -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginEnd="8dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Start Time"
+                        android:textSize="11sp"
+                        android:textColor="#64748B"
+                        android:layout_marginBottom="4dp"
+                        android:gravity="center" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/startTimeTextView"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="09:00"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1E293B"
+                        app:cornerRadius="12dp"
+                        app:strokeColor="#6366F1"
+                        app:strokeWidth="1dp"
+                        app:backgroundTint="#F8FAFC"
+                        android:minWidth="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        tools:text="09:00" />
+
+                </LinearLayout>
+
+                <!-- Arrow/Divider -->
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@android:drawable/ic_media_ff"
+                    app:tint="#64748B"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_marginTop="18dp" />
+
+                <!-- End Time Button -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="8dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="End Time"
+                        android:textSize="11sp"
+                        android:textColor="#64748B"
+                        android:layout_marginBottom="4dp"
+                        android:gravity="center" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/endTimeTextView"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="17:00"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#1E293B"
+                        app:cornerRadius="12dp"
+                        app:strokeColor="#F59E0B"
+                        app:strokeWidth="1dp"
+                        app:backgroundTint="#F8FAFC"
+                        android:minWidth="0dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        tools:text="17:00" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Duration Info -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="12dp"
+                android:padding="8dp"
+                android:background="#F8FAFC"
+                android:alpha="0.8">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@android:drawable/ic_menu_agenda"
+                    app:tint="#64748B"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/durationText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="8 hours duration"
+                    android:textSize="13sp"
+                    android:textColor="#64748B"
+                    android:textStyle="bold"
+                    tools:text="8 hours duration" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
     </LinearLayout>
-</androidx.cardview.widget.CardView>
+
+    <!-- Subtle Animation Background -->
+    <View
+        android:id="@+id/animationOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#E0E7FF"
+        android:alpha="0"
+        android:visibility="gone" />
+
+</com.google.android.material.card.MaterialCardView>

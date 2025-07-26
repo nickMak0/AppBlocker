@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:columnCount="2"
+    android:rowCount="2">
+
+    <!-- Apps Blocked Stat -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/appsBlockedCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="24"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Apps Blocked"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"
+            android:textAlignment="center" />
+
+    </LinearLayout>
+
+    <!-- Sites Blocked Stat -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/sitesBlockedCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="156"
+            android:textColor="?attr/colorSecondary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sites Blocked"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"
+            android:textAlignment="center" />
+
+    </LinearLayout>
+
+    <!-- Focus Time Stat -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/focusTimeCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="4h 32m"
+            android:textColor="?attr/colorTertiary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Focus Time"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"
+            android:textAlignment="center" />
+
+    </LinearLayout>
+
+    <!-- Streak Stat -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_columnWeight="1"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/streakCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="7 days"
+            android:textColor="?attr/colorError"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Current Streak"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="12sp"
+            android:textAlignment="center" />
+
+    </LinearLayout>
+
+</GridLayout>

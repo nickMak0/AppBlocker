@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Custom attribute for colorBackground -->
+    <attr name="colorBackground" format="reference|color" />
+
+    <!-- Custom attribute for colorWarning -->
+    <attr name="colorWarning" format="reference|color" />
+</resources>

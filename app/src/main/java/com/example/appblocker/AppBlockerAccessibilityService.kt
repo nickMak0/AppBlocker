@@ -8,13 +8,14 @@ import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.example.appblocker.model.TimeRange
+import com.example.appblocker.utils.StatsManager         // ✅ Tracks app block count
 import com.example.appblocker.utils.TimeRangeStorage
 import com.example.appblocker.utils.TimeUtils
 import java.util.*
 
 class AppBlockerAccessibilityService : AccessibilityService() {
 
-    private val blockInterval = 1500L // in milliseconds
+    private val blockInterval = 1500L // ms between same-app blocks
     private var lastBlockedPackage: String? = null
     private var lastBlockTime: Long = 0L
 
@@ -29,13 +30,14 @@ class AppBlockerAccessibilityService : AccessibilityService() {
 
         val prefs = getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
         val blockingEnabled = prefs.getBoolean("blocking_enabled", true)
+
         if (!blockingEnabled) {
-            Log.d("ACCESS_SERVICE", "Blocking is disabled by toggle.")
+            Log.d("ACCESS_SERVICE", "Blocking disabled by user toggle.")
             return
         }
 
         if (!isWithinScheduledTime()) {
-            Log.d("ACCESS_SERVICE", "Current time is outside scheduled block range.")
+            Log.d("ACCESS_SERVICE", "Outside blocking schedule.")
             return
         }
 
@@ -45,8 +47,9 @@ class AppBlockerAccessibilityService : AccessibilityService() {
         if (blockedApps.contains(currentPackage)) {
             val currentTime = System.currentTimeMillis()
 
+            // Avoid rapid repeat blocking
             if (currentPackage == lastBlockedPackage && currentTime - lastBlockTime < blockInterval) {
-                Log.d("ACCESS_SERVICE", "Duplicate block avoided for: $currentPackage")
+                Log.d("ACCESS_SERVICE", "Duplicate block avoided: $currentPackage")
                 return
             }
 
@@ -55,6 +58,10 @@ class AppBlockerAccessibilityService : AccessibilityService() {
 
             Log.d("ACCESS_SERVICE", "Blocking app: $currentPackage")
 
+            // ✅ Update daily stat
+            StatsManager.incrementAppsBlocked(this)
+
+            // Launch block screen
             val blockIntent = Intent(this, BlockScreenActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
@@ -63,7 +70,7 @@ class AppBlockerAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() {
-        // Required override
+        // Required method — not used
     }
 
     override fun onServiceConnected() {
@@ -76,7 +83,7 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             notificationTimeout = 100
         }
 
-        Log.d("ACCESS_SERVICE", "Accessibility service connected")
+        Log.d("ACCESS_SERVICE", "AppBlocker Accessibility Service connected.")
     }
 
     private fun isWithinScheduledTime(): Boolean {
@@ -86,7 +93,7 @@ class AppBlockerAccessibilityService : AccessibilityService() {
         val savedDaysSet = prefs.getStringSet("schedule_days_of_week", null)
 
         if (savedDaysSet.isNullOrEmpty()) {
-            Log.d("ACCESS_SERVICE", "No days selected — skipping block.")
+            Log.d("ACCESS_SERVICE", "No scheduled days set.")
             return false
         }
 
@@ -94,7 +101,7 @@ class AppBlockerAccessibilityService : AccessibilityService() {
         val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
 
         if (!selectedDays.contains(currentDay)) {
-            Log.d("ACCESS_SERVICE", "Today ($currentDay) not in selected schedule days.")
+            Log.d("ACCESS_SERVICE", "Today ($currentDay) is not a scheduled block day.")
             return false
         }
 
@@ -105,9 +112,8 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             return false
         }
 
-        val result = TimeUtils.isInAnyRange(timeRanges)
-        Log.d("ACCESS_SERVICE", "Time check result: $result")
-        return result
+        val isWithin = TimeUtils.isInAnyRange(timeRanges)
+        Log.d("ACCESS_SERVICE", "Within time range: $isWithin")
+        return isWithin
     }
-
 }

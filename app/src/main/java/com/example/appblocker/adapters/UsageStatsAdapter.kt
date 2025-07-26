@@ -1,50 +1,52 @@
+// File: app/src/main/java/com/example/appblocker/adapters/UsageStatsAdapter.kt
 package com.example.appblocker.adapters
 
 import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.example.appblocker.R
+import com.example.appblocker.databinding.ItemUsageStatBinding
 import com.example.appblocker.model.UsageStatItem
+import java.util.concurrent.TimeUnit
 
 class UsageStatsAdapter(
-    private var items: List<UsageStatItem>,
-    private val packageManager: PackageManager
-) : RecyclerView.Adapter<UsageStatsAdapter.UsageStatViewHolder>() {
+    private var usageStats: List<UsageStatItem>,
+    private val pm: PackageManager
+) : RecyclerView.Adapter<UsageStatsAdapter.UsageViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UsageStatViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_usage_stat, parent, false)
-        return UsageStatViewHolder(view)
+    inner class UsageViewHolder(val binding: ItemUsageStatBinding) : RecyclerView.ViewHolder(binding.root)
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UsageViewHolder {
+        val binding = ItemUsageStatBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return UsageViewHolder(binding)
     }
 
-    override fun onBindViewHolder(holder: UsageStatViewHolder, position: Int) {
-        val item = items[position]
-        holder.appName.text = item.appName
-        holder.usageTime.text = "${item.minutesUsed} min"
+    override fun onBindViewHolder(holder: UsageViewHolder, position: Int) {
+        val item = usageStats[position]
+        val icon = try {
+            pm.getApplicationIcon(item.packageName)
+        } catch (e: Exception) {
+            ContextCompat.getDrawable(holder.itemView.context, android.R.drawable.sym_def_app_icon)
+        }
 
-        try {
-            val icon: Drawable = packageManager.getApplicationIcon(item.packageName)
-            holder.appIcon.setImageDrawable(icon)
-        } catch (e: PackageManager.NameNotFoundException) {
-            holder.appIcon.setImageResource(R.drawable.ic_android_placeholder)
+        holder.binding.apply {
+            appName.text = item.appName
+            appIcon.setImageDrawable(icon)
+            usageTime.text = formatTime(item.minutesUsed)
         }
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = usageStats.size
 
-    // Add this method to update data
-    fun updateData(newItems: List<UsageStatItem>) {
-        items = newItems
+    fun updateData(newStats: List<UsageStatItem>) {
+        usageStats = newStats
         notifyDataSetChanged()
     }
 
-    class UsageStatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val appIcon: ImageView = itemView.findViewById(R.id.appIcon)
-        val appName: TextView = itemView.findViewById(R.id.appName)
-        val usageTime: TextView = itemView.findViewById(R.id.usageTime)
+    private fun formatTime(mins: Long): String {
+        val h = TimeUnit.MINUTES.toHours(mins)
+        val rem = mins % 60
+        return if (h > 0) "${h}h ${rem}m" else "${rem}m"
     }
 }

@@ -1,228 +1,433 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true">
+    android:background="#F8FAFC">
 
-    <LinearLayout
+    <!-- App Bar Layout with Modern Design -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:elevation="0dp"
+        app:elevation="0dp"
+        android:background="@drawable/gradient_header_background">
 
-        <!-- Toolbar for header -->
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+            android:id="@+id/collapsingToolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            app:navigationIcon="@android:drawable/ic_menu_revert"
+            android:layout_height="110dp"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            android:background="@drawable/header_scrim"
+            app:contentScrim="@drawable/header_scrim"
             app:title="Schedule Settings"
-            app:subtitle="Create your perfect routine"
-            app:titleTextColor="@android:color/white"
-            app:subtitleTextColor="@android:color/white" />
+            app:expandedTitleMarginStart="24dp"
+            app:expandedTitleMarginBottom="24dp"
+            app:collapsedTitleTextColor="#FFFFFF"
+            app:expandedTitleTextColor="#1E293B">
 
-        <!-- Back Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/backButton"
-            style="@style/Widget.Material3.Button.IconButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            app:icon="@android:drawable/ic_menu_revert"
-            app:iconTint="@android:color/white"
-            android:backgroundTint="#33FFFFFF" />
+            <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"/>
 
-        <!-- Repeat Days Section -->
-        <com.google.android.material.card.MaterialCardView
+
+
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main Content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="100dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
+            android:orientation="vertical"
+            android:paddingTop="16dp">
 
-            <LinearLayout
+            <!-- Repeat Days Section -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Repeat Days"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Choose which days to repeat"
-                    android:textSize="14sp"
-                    android:layout_marginTop="4dp" />
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/dayChipGroup"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:singleSelection="false"
-                    app:chipSpacingHorizontal="8dp"
-                    app:chipSpacingVertical="8dp">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/statusChip"
-                        style="@style/Widget.Material3.Chip.Assist"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0 selected"
-                        android:layout_marginTop="12dp"
-                        app:chipIcon="@android:drawable/ic_menu_info_details"
-                        app:chipIconTint="@android:color/darker_gray"
-                        android:textColor="@android:color/darker_gray" />
-
-                    <!-- Days -->
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Sun"
-                        android:tag="Sun"
-                        style="@style/Widget.Material3.Chip.Filter" />
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Mon"
-                        android:tag="Mon"
-                        style="@style/Widget.Material3.Chip.Filter" />
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Tue"
-                        android:tag="Tue"
-                        style="@style/Widget.Material3.Chip.Filter" />
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wed"
-                        android:tag="Wed"
-                        style="@style/Widget.Material3.Chip.Filter" />
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Thu"
-                        android:tag="Thu"
-                        style="@style/Widget.Material3.Chip.Filter" />
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Fri"
-                        android:tag="Fri"
-                        style="@style/Widget.Material3.Chip.Filter" />
-                    <com.google.android.material.chip.Chip
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Sat"
-                        android:tag="Sat"
-                        style="@style/Widget.Material3.Chip.Filter" />
-                </com.google.android.material.chip.ChipGroup>
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginVertical="8dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="#FFFFFF">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="12dp">
+                    android:orientation="vertical"
+                    android:padding="24dp">
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/weekdaysChip"
-                        android:layout_width="wrap_content"
+                    <!-- Section Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        style="@style/Widget.Material3.Chip.Suggestion"
-                        android:text="Weekdays" />
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/weekendsChip"
-                        android:layout_width="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#E0E7FF">
+
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:src="@android:drawable/ic_menu_my_calendar"
+                                app:tint="#6366F1" />
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Repeat Days"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="#1E293B" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Choose which days to repeat your schedule"
+                                android:textSize="14sp"
+                                android:textColor="#64748B"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/statusChip"
+                            style="@style/Widget.Material3.Chip.Assist"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0 selected"
+                            app:chipIcon="@android:drawable/ic_menu_info_details"
+                            app:chipIconTint="#64748B"
+                            android:textColor="#64748B"
+                            app:chipBackgroundColor="#F1F5F9" />
+
+                    </LinearLayout>
+
+                    <!-- Day Selection Chips -->
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/dayChipGroup"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        style="@style/Widget.Material3.Chip.Suggestion"
-                        android:text="Weekends" />
+                        android:layout_marginTop="20dp"
+                        app:singleSelection="false"
+                        app:chipSpacingHorizontal="8dp"
+                        app:chipSpacingVertical="8dp">
+
+                        <com.google.android.material.chip.Chip
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Sunday"
+                            android:tag="Sun"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:textColor="#64748B"
+                            app:chipBackgroundColor="#F1F5F9"
+                            app:chipCornerRadius="20dp"
+                            app:chipMinHeight="44dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Monday"
+                            android:tag="Mon"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:textColor="#64748B"
+                            app:chipBackgroundColor="#F1F5F9"
+                            app:chipCornerRadius="20dp"
+                            app:chipMinHeight="44dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tuesday"
+                            android:tag="Tue"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:textColor="#64748B"
+                            app:chipBackgroundColor="#F1F5F9"
+                            app:chipCornerRadius="20dp"
+                            app:chipMinHeight="44dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Wednesday"
+                            android:tag="Wed"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:textColor="#64748B"
+                            app:chipBackgroundColor="#F1F5F9"
+                            app:chipCornerRadius="20dp"
+                            app:chipMinHeight="44dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Thursday"
+                            android:tag="Thu"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:textColor="#64748B"
+                            app:chipBackgroundColor="#F1F5F9"
+                            app:chipCornerRadius="20dp"
+                            app:chipMinHeight="44dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Friday"
+                            android:tag="Fri"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:textColor="#64748B"
+                            app:chipBackgroundColor="#F1F5F9"
+                            app:chipCornerRadius="20dp"
+                            app:chipMinHeight="44dp" />
+
+                        <com.google.android.material.chip.Chip
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Saturday"
+                            android:tag="Sat"
+                            style="@style/Widget.Material3.Chip.Filter"
+                            android:textColor="#64748B"
+                            app:chipBackgroundColor="#F1F5F9"
+                            app:chipCornerRadius="20dp"
+                            app:chipMinHeight="44dp" />
+
+                    </com.google.android.material.chip.ChipGroup>
+
+                    <!-- Quick Select Options -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="16dp"
+                        android:gravity="center">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/weekdaysChip"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="8dp"
+                            style="@style/Widget.Material3.Chip.Suggestion"
+                            android:text="Weekdays"
+                            app:chipIcon="@android:drawable/ic_menu_agenda"
+                            app:chipBackgroundColor="#E0E7FF"
+                            android:textColor="#6366F1"
+                            app:chipIconTint="#6366F1" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/weekendsChip"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            style="@style/Widget.Material3.Chip.Suggestion"
+                            android:text="Weekends"
+                            app:chipIcon="@android:drawable/ic_menu_week"
+                            app:chipBackgroundColor="#E0E7FF"
+                            android:textColor="#6366F1"
+                            app:chipIconTint="#6366F1" />
+
+                    </LinearLayout>
 
                 </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
 
-        <!-- Time Ranges Section -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
+            </com.google.android.material.card.MaterialCardView>
 
-            <LinearLayout
+            <!-- Time Ranges Section -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginVertical="8dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="2dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="#FFFFFF">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Time Ranges"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Set your active hours"
-                    android:textSize="14sp"
-                    android:layout_marginTop="4dp" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/timeRangeRecyclerView"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:nestedScrollingEnabled="false" />
+                    android:orientation="vertical"
+                    android:padding="24dp">
 
-                <TextView
-                    android:id="@+id/emptyStateText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="No time ranges yet. Tap the + button to add one."
-                    android:textSize="14sp"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:visibility="gone"
-                    android:layout_marginTop="16dp" />
+                    <!-- Section Header -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/addTimeButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="end"
-                    android:layout_marginTop="16dp"
-                    app:srcCompat="@android:drawable/ic_input_add" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                        <com.google.android.material.card.MaterialCardView
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            app:cardCornerRadius="16dp"
+                            app:cardElevation="0dp"
+                            app:cardBackgroundColor="#FEF3C7">
 
-        <!-- Action Buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="end"
-            android:layout_margin="16dp">
+                            <ImageView
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_gravity="center"
+                                android:src="@android:drawable/ic_menu_recent_history"
+                                app:tint="#F59E0B" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/cancelButton"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Cancel" />
+                        </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/saveScheduleButton"
-                style="@style/Widget.Material3.Button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Save Schedule"
-                app:icon="@android:drawable/ic_menu_save" />
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="16dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Time Ranges"
+                                android:textSize="20sp"
+                                android:textStyle="bold"
+                                android:textColor="#1E293B" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Define your active hours throughout the day"
+                                android:textSize="14sp"
+                                android:textColor="#64748B"
+                                android:layout_marginTop="2dp" />
+
+                        </LinearLayout>
+
+                        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                            android:id="@+id/addTimeButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:fabSize="mini"
+                            app:srcCompat="@android:drawable/ic_input_add"
+                            app:backgroundTint="#6366F1"
+                            app:tint="#FFFFFF"
+                            app:elevation="2dp" />
+
+                    </LinearLayout>
+
+                    <!-- Time Range List -->
+
+                    <!-- Empty State -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/timeRangeRecyclerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:nestedScrollingEnabled="false" />
+
+                    <LinearLayout
+                        android:id="@+id/emptyStateLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center"
+                        android:layout_marginTop="32dp"
+                        android:layout_marginBottom="16dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="80dp"
+                            android:layout_height="80dp"
+                            android:src="@android:drawable/ic_menu_recent_history"
+                            android:alpha="0.3"
+                            app:tint="#64748B" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="No time ranges yet"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#64748B"
+                            android:layout_marginTop="16dp" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tap the + button to create your first time range"
+                            android:textSize="14sp"
+                            android:textColor="#64748B"
+                            android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Action Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:background="#FFFFFF"
+        android:padding="16dp"
+        android:elevation="8dp">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/cancelButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:text="Cancel"
+            android:textColor="#1E293B"
+            app:cornerRadius="16dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#E5E7EB" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/saveScheduleButton"
+            style="@style/Widget.Material3.Button"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_weight="2"
+            android:layout_marginStart="8dp"
+            android:text="Save Schedule"
+            app:icon="@android:drawable/ic_menu_save"
+            app:cornerRadius="16dp"
+            android:backgroundTint="#6366F1"
+            android:textColor="#FFFFFF" />
+
     </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

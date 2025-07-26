@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="400dp"
+    android:height="200dp"
+    android:viewportWidth="400"
+    android:viewportHeight="200">
+
+    <!-- Background rectangle -->
+    <path
+        android:fillColor="@color/white"
+        android:fillAlpha="0.1"
+        android:pathData="M0,0 H400 V200 H0 Z" />
+
+    <!-- Circle at (100,50) radius 30 -->
+    <path
+        android:fillColor="@color/white"
+        android:fillAlpha="0.05"
+        android:pathData="M70,50
+                          A30,30 0 1,0 130,50
+                          A30,30 0 1,0 70,50" />
+
+    <!-- Circle at (300,130) radius 40 -->
+    <path
+        android:fillColor="@color/white"
+        android:fillAlpha="0.05"
+        android:pathData="M260,130
+                          A40,40 0 1,0 340,130
+                          A40,40 0 1,0 260,130" />
+
+    <!-- Circle at (200,100) radius 60 -->
+    <path
+        android:fillColor="@color/white"
+        android:fillAlpha="0.03"
+        android:pathData="M140,100
+                          A60,60 0 1,0 260,100
+                          A60,60 0 1,0 140,100" />
+
+</vector>

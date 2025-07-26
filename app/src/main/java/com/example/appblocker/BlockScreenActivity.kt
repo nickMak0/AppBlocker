@@ -6,6 +6,8 @@ import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.example.appblocker.databinding.ActivityBlockScreenBinding
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class BlockScreenActivity : AppCompatActivity() {
 
@@ -16,7 +18,6 @@ class BlockScreenActivity : AppCompatActivity() {
         binding = ActivityBlockScreenBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Keep screen on and show over lock screen
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
@@ -25,10 +26,9 @@ class BlockScreenActivity : AppCompatActivity() {
                     WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
 
-        // Enter immersive mode
         hideSystemUI()
 
-        // ✅ Show close button for exiting (Option 1)
+        // ✅ Show close button for exiting
         binding.closeButton.visibility = View.VISIBLE
         binding.closeButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_MAIN).apply {
@@ -38,13 +38,27 @@ class BlockScreenActivity : AppCompatActivity() {
             startActivity(intent)
             finish()
         }
+
+        // ✅ Load and display random quote
+        val quote = loadRandomQuote()
+        binding.motivationQuote.text = quote
+    }
+
+    private fun loadRandomQuote(): String {
+        return try {
+            val inputStream = resources.openRawResource(R.raw.motivation_quotes)
+            val reader = BufferedReader(InputStreamReader(inputStream))
+            val quotes = reader.readLines().filter { it.isNotBlank() }
+            quotes.randomOrNull() ?: "Stay focused. Stay disciplined."
+        } catch (e: Exception) {
+            "Stay focused. Stay disciplined."
+        }
     }
 
     override fun onBackPressed() {
-        // Block the back button
+        // Do nothing to block back
     }
 
-    // Function to hide status + nav bars (immersive mode)
     private fun hideSystemUI() {
         window.decorView.systemUiVisibility =
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or

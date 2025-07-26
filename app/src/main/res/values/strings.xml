@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">AppBlocker</string>
     <string name="accessibility_service_description">AppBlocker monitors app usage to block selected apps</string>
+    <string name="accessibility_limit_enforcer_description">Used to enforce app time limits by monitoring which app is on screen</string>
+    <string name="accessibility_blocker_description">AppBlocker (Scheduled Blocking)</string>
+    <string name="accessibility_enforcer_description">AppBlocker (Time Limit Enforcer)</string>
+
 
 </resources>

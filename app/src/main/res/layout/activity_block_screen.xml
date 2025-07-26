@@ -3,24 +3,41 @@
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
-    android:background="#000">
+    android:gravity="center"
+    android:padding="32dp"
+    android:background="#000000">
 
+    <!-- Blocked Message -->
     <TextView
         android:id="@+id/blockedMessage"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="This app is blocked"
-        android:textColor="#FFF"
+        android:textColor="#FFFFFF"
         android:textSize="24sp"
-        android:padding="24dp" />
+        android:textStyle="bold"
+        android:paddingBottom="16dp"
+        android:textAlignment="center" />
 
+    <!-- Motivational Quote -->
+    <TextView
+        android:id="@+id/motivationQuote"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stay strong. Stay focused."
+        android:textColor="#AAAAAA"
+        android:textSize="18sp"
+        android:paddingBottom="24dp"
+        android:textAlignment="center" />
+
+    <!-- Close Button -->
     <Button
         android:id="@+id/closeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Close"
-        android:visibility="visible" />
-
+        android:visibility="visible"
+        android:backgroundTint="#EF4444"
+        android:textColor="#FFFFFF" />
 </LinearLayout>
