@@ -21,6 +21,7 @@ AppBlocker is a personal-use Android app designed to help you **block distractin
 | **8. Clean Design** | MaterialCardView, MaterialSwitch, proper layouts with padding and spacing. |
 | **9. Filters Launchable Apps** | Only shows user-installed apps with launch intent. |
 | **10. Real-Time Feedback** | Toasts and UI updates confirm actions and permissions. |
+| **11. Per-App Scheduling** | Set individual time schedules for each blocked app. |
 
 ---
 
@@ -48,7 +49,7 @@ AppBlocker is a personal-use Android app designed to help you **block distractin
 | Idea | Description |
 |------|-------------|
 | 🔒 App Unlock PIN | Prevent accidental unblock |
-| ⏰ Scheduler | Time-based blocking (e.g., 10pm–7am) |
+| ⏰ Advanced Scheduler | Multiple time ranges per app, recurring patterns |
 | 📊 Usage Stats | Monitor how often blocked apps are accessed |
 | 🔍 App Search | Add search bar in blocked app manager |
 | ☁️ Cloud Sync | Firebase sync for backup/restore |

@@ -12,25 +12,26 @@ import com.example.appblocker.model.TimeRange
 import com.example.appblocker.utils.PinUtils
 import com.example.appblocker.utils.TimeRangeStorage
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
+import com.google.android.material.card.MaterialCardView
+import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 
 class ScheduleSettingsActivity : AppCompatActivity() {
 
     private lateinit var cancelButton: MaterialButton
-    private lateinit var statusChip: Chip
     private lateinit var recyclerView: RecyclerView
     private lateinit var saveButton: MaterialButton
     private lateinit var addTimeRangeButton: FloatingActionButton
-    private lateinit var dayChipGroup: ChipGroup
-    private lateinit var weekdaysChip: Chip
-    private lateinit var weekendsChip: Chip
+    private lateinit var scheduleEnabledSwitch: SwitchMaterial
+    private lateinit var weekdaysCard: MaterialCardView
+    private lateinit var weekendsCard: MaterialCardView
     private lateinit var timeRangeAdapter: TimeRangeAdapter
     private lateinit var timeRanges: MutableList<TimeRange>
     private val selectedDays = mutableSetOf<Int>()
+    private val dayCards = mutableMapOf<Int, MaterialCardView>()
     private val prefs by lazy {
         getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
     }
@@ -47,14 +48,27 @@ class ScheduleSettingsActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
+        // Setup toolbar
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        toolbar.setNavigationOnClickListener { finish() }
+        
         cancelButton = findViewById(R.id.cancelButton)
-        statusChip = findViewById(R.id.statusChip)
         recyclerView = findViewById(R.id.timeRangeRecyclerView)
         saveButton = findViewById(R.id.saveScheduleButton)
         addTimeRangeButton = findViewById(R.id.addTimeButton)
-        dayChipGroup = findViewById(R.id.dayChipGroup)
-        weekdaysChip = findViewById(R.id.weekdaysChip)
-        weekendsChip = findViewById(R.id.weekendsChip)
+        scheduleEnabledSwitch = findViewById(R.id.scheduleEnabledSwitch)
+        weekdaysCard = findViewById(R.id.weekdaysCard)
+        weekendsCard = findViewById(R.id.weekendsCard)
+        
+        // Initialize day cards
+        dayCards[Calendar.SUNDAY] = findViewById(R.id.sundayCard)
+        dayCards[Calendar.MONDAY] = findViewById(R.id.mondayCard)
+        dayCards[Calendar.TUESDAY] = findViewById(R.id.tuesdayCard)
+        dayCards[Calendar.WEDNESDAY] = findViewById(R.id.wednesdayCard)
+        dayCards[Calendar.THURSDAY] = findViewById(R.id.thursdayCard)
+        dayCards[Calendar.FRIDAY] = findViewById(R.id.fridayCard)
+        dayCards[Calendar.SATURDAY] = findViewById(R.id.saturdayCard)
     }
 
     private fun setupRecyclerView() {
@@ -79,77 +93,79 @@ class ScheduleSettingsActivity : AppCompatActivity() {
         }?.toSet() ?: emptySet()
         selectedDays.clear()
         selectedDays.addAll(savedDays)
-        for (i in 0 until dayChipGroup.childCount) {
-            val chip = dayChipGroup.getChildAt(i) as Chip
-            val day = when (chip.text.toString()) {
-                "Sun" -> Calendar.SUNDAY
-                "Mon" -> Calendar.MONDAY
-                "Tue" -> Calendar.TUESDAY
-                "Wed" -> Calendar.WEDNESDAY
-                "Thu" -> Calendar.THURSDAY
-                "Fri" -> Calendar.FRIDAY
-                "Sat" -> Calendar.SATURDAY
-                else -> 0
-            }
-            chip.isChecked = selectedDays.contains(day)
+        
+        // Update day card appearances
+        dayCards.forEach { (day, card) ->
+            updateDayCardAppearance(card, selectedDays.contains(day))
         }
-        updateStatusChip()
+        
+        // Load schedule enabled state
+        scheduleEnabledSwitch.isChecked = prefs.getBoolean("schedule_enabled", false)
+    }
+    
+    private fun updateDayCardAppearance(card: MaterialCardView, isSelected: Boolean) {
+        if (isSelected) {
+            card.setCardBackgroundColor(getColor(R.color.primary_color))
+            card.strokeColor = getColor(R.color.primary_color)
+        } else {
+            card.setCardBackgroundColor(getColor(R.color.white))
+            card.strokeColor = getColor(R.color.light_gray)
+        }
     }
 
     private fun setupClickListeners() {
-        for (i in 0 until dayChipGroup.childCount) {
-            val chip = dayChipGroup.getChildAt(i) as Chip
-            chip.setOnCheckedChangeListener { _, isChecked ->
-                val day = when (chip.text.toString()) {
-                    "Sun" -> Calendar.SUNDAY
-                    "Mon" -> Calendar.MONDAY
-                    "Tue" -> Calendar.TUESDAY
-                    "Wed" -> Calendar.WEDNESDAY
-                    "Thu" -> Calendar.THURSDAY
-                    "Fri" -> Calendar.FRIDAY
-                    "Sat" -> Calendar.SATURDAY
-                    else -> 0
+        // Day card click listeners
+        dayCards.forEach { (day, card) ->
+            card.setOnClickListener {
+                val isSelected = selectedDays.contains(day)
+                if (isSelected) {
+                    selectedDays.remove(day)
+                } else {
+                    selectedDays.add(day)
                 }
-                if (isChecked) selectedDays.add(day) else selectedDays.remove(day)
-                updateStatusChip()
+                updateDayCardAppearance(card, !isSelected)
             }
         }
 
-        weekdaysChip.setOnClickListener {
-            val weekdays = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
-            val allWeekdaysSelected = weekdays.all { day ->
-                dayChipGroup.findViewWithTag<Chip>(day).isChecked
-            }
+        weekdaysCard.setOnClickListener {
+            val weekdays = listOf(Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY, Calendar.FRIDAY)
+            val allWeekdaysSelected = weekdays.all { selectedDays.contains(it) }
             val newState = !allWeekdaysSelected
-            weekdays.forEach { day ->
-                dayChipGroup.findViewWithTag<Chip>(day).isChecked = newState
-            }
+            
             if (newState) {
-                selectedDays.addAll(listOf(Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY, Calendar.FRIDAY))
+                selectedDays.addAll(weekdays)
             } else {
-                selectedDays.removeAll(listOf(Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY, Calendar.FRIDAY))
+                selectedDays.removeAll(weekdays.toSet())
             }
-            updateStatusChip()
+            
+            weekdays.forEach { day ->
+                dayCards[day]?.let { card -> updateDayCardAppearance(card, newState) }
+            }
         }
 
-        weekendsChip.setOnClickListener {
-            val weekends = listOf("Sat", "Sun")
-            val allWeekendsSelected = weekends.all { day ->
-                dayChipGroup.findViewWithTag<Chip>(day).isChecked
-            }
+        weekendsCard.setOnClickListener {
+            val weekends = listOf(Calendar.SATURDAY, Calendar.SUNDAY)
+            val allWeekendsSelected = weekends.all { selectedDays.contains(it) }
             val newState = !allWeekendsSelected
-            weekends.forEach { day ->
-                dayChipGroup.findViewWithTag<Chip>(day).isChecked = newState
-            }
+            
             if (newState) {
-                selectedDays.addAll(listOf(Calendar.SATURDAY, Calendar.SUNDAY))
+                selectedDays.addAll(weekends)
             } else {
-                selectedDays.removeAll(listOf(Calendar.SATURDAY, Calendar.SUNDAY))
+                selectedDays.removeAll(weekends.toSet())
             }
-            updateStatusChip()
+            
+            weekends.forEach { day ->
+                dayCards[day]?.let { card -> updateDayCardAppearance(card, newState) }
+            }
         }
 
         addTimeRangeButton.setOnClickListener {
+            timeRanges.add(TimeRange())
+            timeRangeAdapter.notifyItemInserted(timeRanges.lastIndex)
+        }
+        
+        // Also handle empty state add button
+        findViewById<MaterialButton>(R.id.emptyStateAddButton)?.setOnClickListener {
             timeRanges.add(TimeRange())
             timeRangeAdapter.notifyItemInserted(timeRanges.lastIndex)
         }
@@ -158,21 +174,16 @@ class ScheduleSettingsActivity : AppCompatActivity() {
             saveSchedule()
         }
 
-
-
         cancelButton.setOnClickListener {
             finish()
         }
-    }
-
-    private fun updateStatusChip() {
-        val count = selectedDays.size
-        statusChip.text = when (count) {
-            0 -> "0 selected"
-            1 -> "1 selected"
-            else -> "$count selected"
+        
+        scheduleEnabledSwitch.setOnCheckedChangeListener { _, isChecked ->
+            prefs.edit().putBoolean("schedule_enabled", isChecked).apply()
         }
     }
+
+
 
     private fun saveSchedule() {
         if (selectedDays.isEmpty()) {
@@ -187,9 +198,10 @@ class ScheduleSettingsActivity : AppCompatActivity() {
         prefs.edit().apply {
             putStringSet("schedule_days_of_week", selectedDays.map { it.toString() }.toSet())
             putString("time_ranges", TimeRangeStorage.serialize(validRanges))
+            putBoolean("schedule_enabled", scheduleEnabledSwitch.isChecked)
             apply()
         }
-        Toast.makeText(this, "Schedule saved", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Schedule saved successfully", Toast.LENGTH_SHORT).show()
         finish()
     }
 

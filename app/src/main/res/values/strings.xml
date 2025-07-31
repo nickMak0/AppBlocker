@@ -4,6 +4,24 @@
     <string name="accessibility_limit_enforcer_description">Used to enforce app time limits by monitoring which app is on screen</string>
     <string name="accessibility_blocker_description">AppBlocker (Scheduled Blocking)</string>
     <string name="accessibility_enforcer_description">AppBlocker (Time Limit Enforcer)</string>
-
+    
+    <!-- MainActivity strings -->
+    <string name="enable_accessibility_service">Please enable accessibility service</string>
+    <string name="vpn_permission_denied">VPN permission denied</string>
+    <string name="all_blocking_disabled">All blocking disabled</string>
+    <string name="full_protection">Full Protection</string>
+    <string name="partial_protection">Partial Protection</string>
+    <string name="disabled">Disabled</string>
+    <string name="usage_access_granted">Usage Access: ✓ Granted</string>
+    <string name="usage_access_required">Usage Access: ✗ Required</string>
+    <string name="accessibility_enabled">Accessibility: ✓ Enabled</string>
+    <string name="accessibility_required">Accessibility: ✗ Required</string>
+    <string name="all_permissions_granted">All permissions granted</string>
+    <string name="today">Today</string>
+    
+    <plurals name="permissions_required">
+        <item quantity="one">%d permission required</item>
+        <item quantity="other">%d permissions required</item>
+    </plurals>
 
 </resources>

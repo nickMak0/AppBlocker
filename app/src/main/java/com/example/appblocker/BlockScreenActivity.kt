@@ -8,16 +8,19 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.appblocker.databinding.ActivityBlockScreenBinding
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.concurrent.Executors
 
 class BlockScreenActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityBlockScreenBinding
+    private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityBlockScreenBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Set window flags immediately for faster blocking
         window.addFlags(
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                     WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
@@ -28,7 +31,7 @@ class BlockScreenActivity : AppCompatActivity() {
 
         hideSystemUI()
 
-        // ✅ Show close button for exiting
+        // Show close button immediately
         binding.closeButton.visibility = View.VISIBLE
         binding.closeButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_MAIN).apply {
@@ -39,9 +42,17 @@ class BlockScreenActivity : AppCompatActivity() {
             finish()
         }
 
-        // ✅ Load and display random quote
-        val quote = loadRandomQuote()
-        binding.motivationQuote.text = quote
+        // Load quote asynchronously to avoid blocking UI
+        loadQuoteAsync()
+    }
+
+    private fun loadQuoteAsync() {
+        executor.execute {
+            val quote = loadRandomQuote()
+            runOnUiThread {
+                binding.motivationQuote.text = quote
+            }
+        }
     }
 
     private fun loadRandomQuote(): String {
@@ -67,5 +78,10 @@ class BlockScreenActivity : AppCompatActivity() {
                     View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
                     View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        executor.shutdown()
     }
 }

@@ -62,28 +62,26 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, ScheduleSettingsActivity::class.java))
         }
 
-        binding.viewAllText.setOnClickListener {
-            startActivity(Intent(this, FullUsageListActivity::class.java))
+        binding.backButton.setOnClickListener {
+            finish()
         }
     }
 
     private fun updateDateText() {
-        val dateFormat = SimpleDateFormat("EEEE, MMMM dd", Locale.getDefault())
-        binding.dateText.text = dateFormat.format(Date())
+        // Date text removed from redesigned dashboard
     }
 
     private fun loadLiveStats() {
         try {
             val appsBlocked = StatsManager.getAppsBlocked(this)
             val sitesBlocked = StatsManager.getSitesBlocked(this)
-            val focusTime = StatsManager.getFocusTimeFormatted(this)
-            val streak = StatsManager.getStreakDays(this)
+            // Streak removed
 
-            // ✅ Updated references to layout_stats_section.xml include binding
-            binding.includeStatsDashboard.appsBlockedCount.text = appsBlocked.toString()
-            binding.includeStatsDashboard.sitesBlockedCount.text = sitesBlocked.toString()
-            binding.includeStatsDashboard.focusTimeCount.text = focusTime
-            binding.includeStatsDashboard.streakCount.text = "$streak"
+            // Updated references to direct binding elements
+            binding.appsBlockedCount.text = appsBlocked.toString()
+            binding.sitesBlockedCount.text = sitesBlocked.toString()
+            // Focus time removed - redundant metric
+            // Streak removed - not meaningful for app blocker
 
             updateScreenTime()
 
@@ -117,8 +115,7 @@ class DashboardActivity : AppCompatActivity() {
             }
         }
 
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(totalScreenTime)
-        binding.includeStatsDashboard.totalScreenTimeText.text = formatMinutesToHrsMins(minutes)
+        // Screen time removed
 
         loadUsageStats(startTime, endTime)
     }
@@ -180,12 +177,12 @@ class DashboardActivity : AppCompatActivity() {
         return if (hours > 0) "${hours}h ${remaining}m" else "${remaining}m"
     }
 
+    // Removed getBlockedAppsCount - no longer needed
+
     private fun showDefaultStatsFallback() {
-        binding.includeStatsDashboard.appsBlockedCount.text = "0"
-        binding.includeStatsDashboard.sitesBlockedCount.text = "0"
-        binding.includeStatsDashboard.focusTimeCount.text = "0m"
-        binding.includeStatsDashboard.streakCount.text = "0"
-        binding.dateText.text = "Today"
-        binding.includeStatsDashboard.totalScreenTimeText.text = "0m"
+        binding.appsBlockedCount.text = "0"
+        binding.sitesBlockedCount.text = "0"
+        // Focus time removed
+        // Streak removed
     }
 }

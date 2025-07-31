@@ -8,6 +8,7 @@ import android.content.Intent
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import com.example.appblocker.model.TimeRange
+import com.example.appblocker.utils.AppScheduleChecker
 import com.example.appblocker.utils.StatsManager         // ✅ Tracks app block count
 import com.example.appblocker.utils.TimeRangeStorage
 import com.example.appblocker.utils.TimeUtils
@@ -15,41 +16,56 @@ import java.util.*
 
 class AppBlockerAccessibilityService : AccessibilityService() {
 
-    private val blockInterval = 1500L // ms between same-app blocks
+    private val blockInterval = 1000L // Reduced from 1500ms to 1000ms for faster response
     private var lastBlockedPackage: String? = null
     private var lastBlockTime: Long = 0L
+    
+    // Cache preferences for better performance
+    private var cachedBlockedApps: Set<String> = emptySet()
+    private var cachedBlockingEnabled: Boolean = true
+    private var lastPrefsUpdate: Long = 0L
+    private val prefsCacheTimeout = 5000L // 5 seconds cache
 
-    private val blockedApps: Set<String>
-        get() {
+    private fun updateCachedPreferences() {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastPrefsUpdate > prefsCacheTimeout) {
             val prefs = getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
-            return prefs.getStringSet("blockedApps", emptySet()) ?: emptySet()
+            cachedBlockedApps = prefs.getStringSet("blockedApps", emptySet()) ?: emptySet()
+            cachedBlockingEnabled = prefs.getBoolean("blocking_enabled", true)
+            lastPrefsUpdate = currentTime
         }
+    }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.packageName == null) return
 
-        val prefs = getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
-        val blockingEnabled = prefs.getBoolean("blocking_enabled", true)
+        // Update cached preferences
+        updateCachedPreferences()
 
-        if (!blockingEnabled) {
-            Log.d("ACCESS_SERVICE", "Blocking disabled by user toggle.")
-            return
-        }
-
-        if (!isWithinScheduledTime()) {
-            Log.d("ACCESS_SERVICE", "Outside blocking schedule.")
+        if (!cachedBlockingEnabled) {
             return
         }
 
         val currentPackage = event.packageName.toString()
-        Log.d("ACCESS_SERVICE", "Detected package: $currentPackage")
 
-        if (blockedApps.contains(currentPackage)) {
+        if (cachedBlockedApps.contains(currentPackage)) {
+            // Check individual app schedule first, then fall back to global schedule
+            val hasIndividualSchedule = AppScheduleChecker.hasAppSchedule(this, currentPackage)
+            val shouldBlock = if (hasIndividualSchedule) {
+                // Use individual app schedule
+                AppScheduleChecker.isAppBlockedBySchedule(this, currentPackage)
+            } else {
+                // Fall back to global schedule
+                isWithinScheduledTime()
+            }
+            
+            if (!shouldBlock) {
+                return
+            }
             val currentTime = System.currentTimeMillis()
 
             // Avoid rapid repeat blocking
             if (currentPackage == lastBlockedPackage && currentTime - lastBlockTime < blockInterval) {
-                Log.d("ACCESS_SERVICE", "Duplicate block avoided: $currentPackage")
                 return
             }
 
@@ -61,9 +77,9 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             // ✅ Update daily stat
             StatsManager.incrementAppsBlocked(this)
 
-            // Launch block screen
+            // Launch block screen immediately
             val blockIntent = Intent(this, BlockScreenActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION)
             }
             startActivity(blockIntent)
         }
@@ -77,10 +93,13 @@ class AppBlockerAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
 
         serviceInfo = AccessibilityServiceInfo().apply {
-            eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED
+            eventTypes = AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED or 
+                        AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED or
+                        AccessibilityEvent.TYPE_VIEW_CLICKED
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
-            flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS
-            notificationTimeout = 100
+            flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
+                    AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+            notificationTimeout = 25 // Further reduced for ultra-fast detection
         }
 
         Log.d("ACCESS_SERVICE", "AppBlocker Accessibility Service connected.")
@@ -93,7 +112,6 @@ class AppBlockerAccessibilityService : AccessibilityService() {
         val savedDaysSet = prefs.getStringSet("schedule_days_of_week", null)
 
         if (savedDaysSet.isNullOrEmpty()) {
-            Log.d("ACCESS_SERVICE", "No scheduled days set.")
             return false
         }
 
@@ -101,7 +119,6 @@ class AppBlockerAccessibilityService : AccessibilityService() {
         val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
 
         if (!selectedDays.contains(currentDay)) {
-            Log.d("ACCESS_SERVICE", "Today ($currentDay) is not a scheduled block day.")
             return false
         }
 
@@ -112,8 +129,6 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             return false
         }
 
-        val isWithin = TimeUtils.isInAnyRange(timeRanges)
-        Log.d("ACCESS_SERVICE", "Within time range: $isWithin")
-        return isWithin
+        return TimeUtils.isInAnyRange(timeRanges)
     }
 }

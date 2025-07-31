@@ -172,5 +172,10 @@
 
     <!-- Tertiary Color -->
     <color name="tertiary_color">#8B5CF6</color> <!-- Violet (same as your md_theme_tertiary) -->
+    
+    <!-- Additional colors for schedule settings -->
+    <color name="light_gray">#E2E8F0</color>
+    <color name="selected_day_background">#6366F1</color>
+    <color name="unselected_day_background">#F8FAFC</color>
 
 </resources>

@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/appblocker/MainActivity.kt
 package com.example.appblocker
 
 import android.app.Activity
@@ -6,8 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
-import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
@@ -19,25 +16,23 @@ import com.example.appblocker.utils.StatsManager
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.materialswitch.MaterialSwitch
-import java.text.SimpleDateFormat
-import java.util.*
 
+/**
+ * Main entry point for the AppBlocker application.
+ * Handles navigation, permissions, and displays key stats.
+ */
 class MainActivity : AppCompatActivity() {
 
-    // UI Components - Controls
+    // UI Components
     private lateinit var appBlockingSwitch: MaterialSwitch
     private lateinit var vpnBlockingSwitch: MaterialSwitch
     private lateinit var emergencyDisableButton: MaterialButton
     private lateinit var scheduleModeButton: MaterialButton
-
-    // UI Components - Navigation
     private lateinit var manageAppsCard: MaterialCardView
     private lateinit var dashboardCard: MaterialCardView
     private lateinit var scheduleCard: MaterialCardView
     private lateinit var settingsCard: MaterialCardView
-
-    // UI Components - Permissions
-    private lateinit var permissionCard: View
+    private lateinit var permissionCard: android.view.View
     private lateinit var permissionIcon: ImageView
     private lateinit var permissionStatusText: TextView
     private lateinit var accessibilityStatusText: TextView
@@ -45,14 +40,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var usageAccessIcon: ImageView
     private lateinit var accessibilityIcon: ImageView
     private lateinit var settingsButton: ImageView
-
-    // UI Components - Stats (Only detailed stats remain)
     private lateinit var appsBlockedCount: TextView
     private lateinit var sitesBlockedCount: TextView
-    private lateinit var focusTimeCount: TextView
+    // focusTimeCount removed
     private lateinit var streakCount: TextView
-    private lateinit var statsDate: TextView // This is the date in the header of the stats card
-    private lateinit var overallProtectionStatus: TextView // This is for the overall status, likely in activity_main.xml
+
+    private lateinit var overallProtectionStatus: TextView
 
     // Preferences and State
     private lateinit var prefs: SharedPreferences
@@ -64,104 +57,71 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        StatsManager.init(this)
+        setTheme(R.style.Theme_AppBlocker)
+        prefs = getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
+        setupActivityResultLaunchers()
 
-        try {
-            initializeApp()
-            setupActivityResultLaunchers()
-
-            if (PinUtils.isPinSetup(this)) {
-                showPinScreen()
-            } else {
-                initializeMainInterface()
-            }
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error in onCreate", e)
-            showErrorAndFinish("Failed to initialize app")
+        if (PinUtils.isPinSetup(this)) {
+            pinLauncher.launch(Intent(this, PinLockActivity::class.java))
+        } else {
+            initializeMainInterface()
         }
     }
 
     override fun onResume() {
         super.onResume()
-        // Ensure views are initialized before updating UI, especially after PIN verification
-        // Check if `statsDate` or `overallProtectionStatus` are initialized to ensure `initializeMainInterface` ran
-        if (wasPinVerified && ::statsDate.isInitialized) { // Use a reliable initialized view
-            try {
-                updateAllUI()
-            } catch (e: Exception) {
-                Log.e(Constants.TAG, "Error updating UI in onResume", e)
-            }
+        if (wasPinVerified) {
+            updateAllUI()
         }
     }
 
-    private fun initializeApp() {
-        StatsManager.init(this)
-        setTheme(R.style.Theme_AppBlocker)
-        prefs = getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
-    }
-
+    /**
+     * Registers activity result launchers for PIN and VPN permission.
+     */
     private fun setupActivityResultLaunchers() {
         pinLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            handlePinResult(result.resultCode)
+            if (result.resultCode == Activity.RESULT_OK) {
+                wasPinVerified = true
+                initializeMainInterface()
+            } else {
+                finish()
+            }
         }
-
         vpnRequestLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             handleVpnPermissionResult(result.resultCode)
         }
     }
 
-    private fun showPinScreen() {
-        pinLauncher.launch(Intent(this, PinLockActivity::class.java))
-    }
-
-    private fun handlePinResult(resultCode: Int) {
-        if (resultCode == RESULT_OK) {
-            wasPinVerified = true
-            initializeMainInterface()
-        } else {
-            finish()
-        }
-    }
-
+    /**
+     * Initializes the main UI after PIN verification.
+     */
     private fun initializeMainInterface() {
         wasPinVerified = true
-        setContentView(R.layout.activity_main) // Assuming activity_main.xml includes the layout_stats_section
-
-        try {
-            initializeViews()
-            setupEventListeners()
-            loadSavedStates()
-            updateAllUI()
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error initializing main interface", e)
-            showErrorAndFinish("Failed to load interface")
-        }
+        setContentView(R.layout.activity_main)
+        initializeViews()
+        setupEventListeners()
+        loadSavedStates()
+        updateAllUI()
     }
 
     private fun initializeViews() {
-        initializeControlViews()
-        initializeNavigationViews()
-        initializePermissionViews()
-        overallProtectionStatus = findViewById(R.id.overallProtectionStatus) // Ensure this ID is still valid in activity_main.xml
-    }
-
-    private fun initializeControlViews() {
-        val controlsInclude = findViewById<View>(R.id.includeControls)
+        // Controls
+        val controlsInclude = findViewById<android.view.View>(R.id.includeControls)
         appBlockingSwitch = controlsInclude.findViewById(R.id.appBlockingSwitch)
         vpnBlockingSwitch = controlsInclude.findViewById(R.id.vpnBlockingSwitch)
         emergencyDisableButton = controlsInclude.findViewById(R.id.emergencyDisableButton)
         scheduleModeButton = controlsInclude.findViewById(R.id.scheduleModeButton)
-    }
 
-    private fun initializeNavigationViews() {
-        val quickActionsInclude = findViewById<View>(R.id.includeQuickActions)
+        // Navigation
+        val quickActionsInclude = findViewById<android.view.View>(R.id.includeQuickActions)
         dashboardCard = quickActionsInclude.findViewById(R.id.dashboardCard)
         manageAppsCard = quickActionsInclude.findViewById(R.id.manageAppsCard)
         scheduleCard = quickActionsInclude.findViewById(R.id.scheduleCard)
         settingsCard = quickActionsInclude.findViewById(R.id.settingsCard)
-    }
 
-    private fun initializePermissionViews() {
-        val permissionInclude = findViewById<View>(R.id.includePermission)
+        // Permissions
+        val permissionInclude = findViewById<android.view.View>(R.id.includePermission)
         permissionCard = permissionInclude
         permissionIcon = permissionInclude.findViewById(R.id.permissionIcon)
         permissionStatusText = permissionInclude.findViewById(R.id.permissionStatusText)
@@ -170,130 +130,72 @@ class MainActivity : AppCompatActivity() {
         usageAccessIcon = permissionInclude.findViewById(R.id.usageAccessIcon)
         accessibilityIcon = permissionInclude.findViewById(R.id.accessibilityIcon)
         settingsButton = permissionInclude.findViewById(R.id.settingsButton)
-    }
 
+        // Stats
+        appsBlockedCount = findViewById(R.id.appsBlockedCount)
+        sitesBlockedCount = findViewById(R.id.sitesBlockedCount)
+        overallProtectionStatus = findViewById(R.id.overallProtectionStatus)
+    }
 
     private fun setupEventListeners() {
-        setupSwitchListeners()
-        setupButtonListeners()
-        setupNavigationListeners()
-        setupPermissionListeners()
-    }
-
-    private fun setupSwitchListeners() {
-        appBlockingSwitch.setOnCheckedChangeListener { _, isChecked ->
-            handleAppBlockingToggle(isChecked)
-        }
-
-        vpnBlockingSwitch.setOnCheckedChangeListener { _, isChecked ->
-            handleVpnBlockingToggle(isChecked)
-        }
-    }
-
-    private fun setupButtonListeners() {
-        emergencyDisableButton.setOnClickListener {
-            handleEmergencyDisable()
-        }
-
-        scheduleModeButton.setOnClickListener {
-            navigateToActivity(ScheduleSettingsActivity::class.java)
-        }
-    }
-
-    private fun setupNavigationListeners() {
+        appBlockingSwitch.setOnCheckedChangeListener { _, isChecked -> handleAppBlockingToggle(isChecked) }
+        vpnBlockingSwitch.setOnCheckedChangeListener { _, isChecked -> handleVpnBlockingToggle(isChecked) }
+        emergencyDisableButton.setOnClickListener { handleEmergencyDisable() }
+        scheduleModeButton.setOnClickListener { navigateToActivity(ScheduleSettingsActivity::class.java) }
         dashboardCard.setOnClickListener { navigateToActivity(DashboardActivity::class.java) }
         manageAppsCard.setOnClickListener { navigateToActivity(ManageAppsActivity::class.java) }
         scheduleCard.setOnClickListener { navigateToActivity(ScheduleSettingsActivity::class.java) }
         settingsCard.setOnClickListener { PermissionUtils.openAppSettings(this, packageName) }
-    }
-
-    private fun setupPermissionListeners() {
         permissionCard.setOnClickListener { openPermissionSettings() }
         settingsButton.setOnClickListener { openPermissionSettings() }
     }
 
     private fun loadSavedStates() {
-        val isBlockingEnabled = PreferenceHelper.getBlockingEnabled(prefs)
-        val isVpnEnabled = PreferenceHelper.getVpnBlockingEnabled(prefs)
-
-        appBlockingSwitch.isChecked = isBlockingEnabled
-        vpnBlockingSwitch.isChecked = isVpnEnabled
-
-        if (isVpnEnabled) {
-            handleVpnServiceStart()
-        }
+        appBlockingSwitch.isChecked = PreferenceHelper.getBlockingEnabled(prefs)
+        vpnBlockingSwitch.isChecked = PreferenceHelper.getVpnBlockingEnabled(prefs)
+        if (vpnBlockingSwitch.isChecked) handleVpnServiceStart()
     }
 
     private fun handleAppBlockingToggle(isChecked: Boolean) {
-        try {
-            PreferenceHelper.setBlockingEnabled(prefs, isChecked)
-
-            if (isChecked && !PermissionUtils.isAccessibilityServiceEnabled(this, packageName)) {
-                showToast("Please enable accessibility service")
-                PermissionUtils.openAccessibilitySettings(this)
-            }
-            updateProtectionStatus()
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error handling app blocking toggle", e)
-            showToast("Failed to update app blocking")
+        PreferenceHelper.setBlockingEnabled(prefs, isChecked)
+        if (isChecked && !PermissionUtils.isAccessibilityServiceEnabled(this, packageName)) {
+            showToast(getString(R.string.enable_accessibility_service))
+            PermissionUtils.openAccessibilitySettings(this)
         }
+        updateProtectionStatus()
     }
 
     private fun handleVpnBlockingToggle(isChecked: Boolean) {
-        try {
-            if (isChecked) {
-                if (VpnServiceHelper.prepareVpnService(this, vpnRequestLauncher)) {
-                    // Permission already granted, start service
-                    VpnServiceHelper.startVpnService(this)
-                    PreferenceHelper.setVpnBlockingEnabled(prefs, true)
-                }
-                // Else, prepareVpnService already launched the activity, result handled in launcher
-            } else {
-                VpnServiceHelper.stopVpnService(this)
-                PreferenceHelper.setVpnBlockingEnabled(prefs, false)
+        if (isChecked) {
+            if (VpnServiceHelper.prepareVpnService(this, vpnRequestLauncher)) {
+                VpnServiceHelper.startVpnService(this)
+                PreferenceHelper.setVpnBlockingEnabled(prefs, true)
             }
-            updateProtectionStatus()
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error handling VPN blocking toggle", e)
-            showToast("Failed to update VPN blocking")
-            vpnBlockingSwitch.isChecked = false // Reset switch on error
+        } else {
+            VpnServiceHelper.stopVpnService(this)
+            PreferenceHelper.setVpnBlockingEnabled(prefs, false)
         }
+        updateProtectionStatus()
     }
 
     private fun handleVpnPermissionResult(resultCode: Int) {
         if (resultCode == Activity.RESULT_OK) {
-            try {
-                VpnServiceHelper.startVpnService(this)
-                PreferenceHelper.setVpnBlockingEnabled(prefs, true)
-                vpnBlockingSwitch.isChecked = true
-            } catch (e: Exception) {
-                Log.e(Constants.TAG, "Error starting VPN service after permission", e)
-                showToast("Failed to start VPN service.")
-                vpnBlockingSwitch.isChecked = false
-                PreferenceHelper.setVpnBlockingEnabled(prefs, false)
-            }
+            VpnServiceHelper.startVpnService(this)
+            PreferenceHelper.setVpnBlockingEnabled(prefs, true)
+            vpnBlockingSwitch.isChecked = true
         } else {
             vpnBlockingSwitch.isChecked = false
             PreferenceHelper.setVpnBlockingEnabled(prefs, false)
-            showToast("VPN permission denied")
+            showToast(getString(R.string.vpn_permission_denied))
         }
         updateProtectionStatus()
     }
 
     private fun handleVpnServiceStart() {
-        // Check if VPN permission is still valid and service needs to be running
         if (PreferenceHelper.getVpnBlockingEnabled(prefs) && !VpnServiceHelper.isVpnServiceRunning(this)) {
-            try {
-                // If VpnService.prepare returns null, it means we have permission, so start it
-                if (VpnServiceHelper.prepareVpnService(this, vpnRequestLauncher)) {
-                    VpnServiceHelper.startVpnService(this)
-                } else {
-                    // Permission was revoked or needs re-approval
-                    vpnBlockingSwitch.isChecked = false
-                    PreferenceHelper.setVpnBlockingEnabled(prefs, false)
-                }
-            } catch (e: Exception) {
-                Log.e(Constants.TAG, "Error re-starting VPN service", e)
+            if (VpnServiceHelper.prepareVpnService(this, vpnRequestLauncher)) {
+                VpnServiceHelper.startVpnService(this)
+            } else {
                 vpnBlockingSwitch.isChecked = false
                 PreferenceHelper.setVpnBlockingEnabled(prefs, false)
             }
@@ -301,20 +203,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleEmergencyDisable() {
-        try {
-            appBlockingSwitch.isChecked = false
-            vpnBlockingSwitch.isChecked = false
-
-            PreferenceHelper.setBlockingEnabled(prefs, false)
-            PreferenceHelper.setVpnBlockingEnabled(prefs, false)
-
-            VpnServiceHelper.stopVpnService(this)
-            showToast("All blocking disabled")
-            updateProtectionStatus()
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error in emergency disable", e)
-            showToast("Failed to disable all blocking")
-        }
+        appBlockingSwitch.isChecked = false
+        vpnBlockingSwitch.isChecked = false
+        PreferenceHelper.setBlockingEnabled(prefs, false)
+        PreferenceHelper.setVpnBlockingEnabled(prefs, false)
+        VpnServiceHelper.stopVpnService(this)
+        showToast(getString(R.string.all_blocking_disabled))
+        updateProtectionStatus()
     }
 
     private fun updateAllUI() {
@@ -324,103 +219,49 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateStatsUI() {
+        if (!::appsBlockedCount.isInitialized) return
         try {
-            val appsBlocked = StatsManager.getAppsBlocked(this)
-            val sitesBlocked = StatsManager.getSitesBlocked(this)
-            val focusTime = StatsManager.getFocusTimeFormatted(this)
-            val streak = StatsManager.getStreakDays(this)
-
-            // Removed heroAppsBlocked, heroFocusTime, heroStreak assignments
-
-            appsBlockedCount.text = appsBlocked.toString()
-            sitesBlockedCount.text = sitesBlocked.toString()
-            focusTimeCount.text = focusTime
-            streakCount.text = "$streak" // Changed to just number as "Day Streak" is in UI
-
+            appsBlockedCount.text = StatsManager.getAppsBlocked(this).toString()
+            sitesBlockedCount.text = StatsManager.getSitesBlocked(this).toString()
+            // Focus time removed - redundant with existing metrics
+            // Streak removed - not meaningful for app blocker
             updateStatsDate()
         } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error updating stats UI", e)
             setDefaultStatsValues()
         }
     }
 
     private fun updateStatsDate() {
-        try {
-            // Using current date: Saturday, July 26, 2025
-            val dateFormat = SimpleDateFormat("EEEE, MMMM dd", Locale.getDefault())
-            val currentDate = dateFormat.format(Date())
-            statsDate.text = currentDate // "Saturday, July 26"
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error updating stats date", e)
-            statsDate.text = "Today"
-        }
+        // Stats date functionality removed for compilation
     }
 
     private fun updateProtectionStatus() {
-        try {
-            val isBlockingEnabled = PreferenceHelper.getBlockingEnabled(prefs)
-            val isVpnEnabled = PreferenceHelper.getVpnBlockingEnabled(prefs)
-
-            val (statusText, statusColorResId) = when {
-                isBlockingEnabled && isVpnEnabled -> {
-                    Pair("Full Protection", android.R.color.holo_green_dark)
-                }
-                isBlockingEnabled || isVpnEnabled -> {
-                    Pair("Partial Protection", android.R.color.holo_orange_dark)
-                }
-                else -> {
-                    Pair("Disabled", android.R.color.holo_red_dark)
-                }
-            }
-
-            if (::overallProtectionStatus.isInitialized) {
-                overallProtectionStatus.text = statusText
-                overallProtectionStatus.setTextColor(ContextCompat.getColor(this, statusColorResId))
-            } else {
-                Log.w(Constants.TAG, "overallProtectionStatus (activity_main) not initialized, cannot update.")
-            }
-
-            // Removed `statsCardProtectionStatus` update as it's no longer in the XML
-            // if (::statsCardProtectionStatus.isInitialized) { ... }
-
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error updating protection status", e)
-            if (::overallProtectionStatus.isInitialized) {
-                overallProtectionStatus.text = "Unknown"
-                overallProtectionStatus.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
-            }
-            // Removed `statsCardProtectionStatus` error handling
+        val isBlockingEnabled = PreferenceHelper.getBlockingEnabled(prefs)
+        val isVpnEnabled = PreferenceHelper.getVpnBlockingEnabled(prefs)
+        val (statusText, statusColorResId) = when {
+            isBlockingEnabled && isVpnEnabled -> getString(R.string.full_protection) to android.R.color.holo_green_dark
+            isBlockingEnabled || isVpnEnabled -> getString(R.string.partial_protection) to android.R.color.holo_orange_dark
+            else -> getString(R.string.disabled) to android.R.color.holo_red_dark
         }
+        overallProtectionStatus.text = statusText
+        overallProtectionStatus.setTextColor(ContextCompat.getColor(this, statusColorResId))
     }
 
     private fun updatePermissionStatus() {
-        try {
-            val usageAccessGranted = PermissionUtils.isUsageAccessGranted(this)
-            val accessibilityEnabled = PermissionUtils.isAccessibilityServiceEnabled(this, packageName)
-
-            updatePermissionTexts(usageAccessGranted, accessibilityEnabled)
-            updatePermissionIcons(usageAccessGranted, accessibilityEnabled)
-            updateOverallPermissionStatus(usageAccessGranted, accessibilityEnabled)
-
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error updating permission status", e)
-            setDefaultPermissionValues()
-        }
-    }
-
-    private fun updatePermissionTexts(usageGranted: Boolean, accessibilityEnabled: Boolean) {
-        permissionStatusText.text = if (usageGranted) "Usage Access: ✓ Granted" else "Usage Access: ✗ Required"
-        accessibilityStatusText.text = if (accessibilityEnabled) "Accessibility: ✓ Enabled" else "Accessibility: ✗ Required"
+        val usageAccessGranted = PermissionUtils.isUsageAccessGranted(this)
+        val accessibilityEnabled = PermissionUtils.isAccessibilityServiceEnabled(this, packageName)
+        permissionStatusText.text = if (usageAccessGranted) getString(R.string.usage_access_granted) else getString(R.string.usage_access_required)
+        accessibilityStatusText.text = if (accessibilityEnabled) getString(R.string.accessibility_enabled) else getString(R.string.accessibility_required)
+        updatePermissionIcons(usageAccessGranted, accessibilityEnabled)
+        updateOverallPermissionStatus(usageAccessGranted, accessibilityEnabled)
     }
 
     private fun updatePermissionIcons(usageGranted: Boolean, accessibilityEnabled: Boolean) {
-        // Update usage access icon
         val usageIconRes = if (usageGranted) android.R.drawable.ic_menu_info_details else android.R.drawable.ic_dialog_alert
         val usageIconColor = if (usageGranted) android.R.color.holo_green_dark else android.R.color.holo_red_dark
         usageAccessIcon.setImageResource(usageIconRes)
         usageAccessIcon.setColorFilter(ContextCompat.getColor(this, usageIconColor))
 
-        // Update accessibility icon
         val accessibilityIconRes = if (accessibilityEnabled) android.R.drawable.ic_menu_preferences else android.R.drawable.ic_dialog_alert
         val accessibilityIconColor = if (accessibilityEnabled) android.R.color.holo_green_dark else android.R.color.holo_red_dark
         accessibilityIcon.setImageResource(accessibilityIconRes)
@@ -429,15 +270,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateOverallPermissionStatus(usageGranted: Boolean, accessibilityEnabled: Boolean) {
         val allPermissionsGranted = usageGranted && accessibilityEnabled
-
         if (allPermissionsGranted) {
-            overallStatus.text = "All permissions granted"
+            overallStatus.text = getString(R.string.all_permissions_granted)
             overallStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark))
             permissionIcon.setImageResource(android.R.drawable.ic_dialog_info)
             permissionIcon.setColorFilter(ContextCompat.getColor(this, android.R.color.white))
         } else {
             val pendingCount = listOf(usageGranted, accessibilityEnabled).count { !it }
-            overallStatus.text = "$pendingCount permission${if (pendingCount > 1) "s" else ""} required"
+            overallStatus.text = resources.getQuantityString(R.plurals.permissions_required, pendingCount, pendingCount)
             overallStatus.setTextColor(ContextCompat.getColor(this, android.R.color.holo_orange_dark))
             permissionIcon.setImageResource(android.R.drawable.ic_dialog_alert)
             permissionIcon.setColorFilter(ContextCompat.getColor(this, android.R.color.white))
@@ -447,7 +287,6 @@ class MainActivity : AppCompatActivity() {
     private fun openPermissionSettings() {
         val usageAccessGranted = PermissionUtils.isUsageAccessGranted(this)
         val accessibilityEnabled = PermissionUtils.isAccessibilityServiceEnabled(this, packageName)
-
         when {
             !usageAccessGranted -> PermissionUtils.openUsageAccessSettings(this)
             !accessibilityEnabled -> PermissionUtils.openAccessibilitySettings(this)
@@ -455,28 +294,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Removed getBlockedAppsCount - no longer needed
+
     private fun setDefaultStatsValues() {
-        try {
-            // Removed heroAppsBlocked, heroFocusTime, heroStreak default assignments
-            appsBlockedCount.text = "0"
-            sitesBlockedCount.text = "0"
-            focusTimeCount.text = "0m"
-            streakCount.text = "0" // Changed to just number
-            statsDate.text = "Today"
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error setting default stats values", e)
-        }
+        if (!::appsBlockedCount.isInitialized) return
+        appsBlockedCount.text = "0"
+        sitesBlockedCount.text = "0"
+        // Focus time removed
+        // Streak removed
     }
 
-    private fun setDefaultPermissionValues() {
-        try {
-            permissionStatusText.text = "Usage Access: Unknown"
-            accessibilityStatusText.text = "Accessibility: Unknown"
-            overallStatus.text = "Permission status unknown"
-            overallStatus.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
-        } catch (e: Exception) {
-            Log.e(Constants.TAG, "Error setting default permission values", e)
-        }
+    private fun showToast(message: String) {
+        android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
+    }
+
+    private fun navigateToActivity(clazz: Class<*>) {
+        startActivity(Intent(this, clazz))
     }
 
     override fun onDestroy() {

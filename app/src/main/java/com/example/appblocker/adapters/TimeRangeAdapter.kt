@@ -19,12 +19,16 @@ class TimeRangeAdapter(
         val startTime: TextView = view.findViewById(R.id.startTimeTextView)
         val endTime: TextView = view.findViewById(R.id.endTimeTextView)
         val removeButton: View = view.findViewById(R.id.removeTimeRangeButton)
-
+        val durationText: TextView = view.findViewById(R.id.durationText)
 
         fun bind(position: Int) {
             val range = timeRanges[position]
             startTime.text = String.format("%02d:%02d", range.startHour, range.startMinute)
             endTime.text = String.format("%02d:%02d", range.endHour, range.endMinute)
+            
+            // Calculate and display dynamic duration
+            val duration = calculateDuration(range)
+            durationText.text = duration
 
             startTime.setOnClickListener {
                 onTimeClick(position, true)
@@ -36,6 +40,27 @@ class TimeRangeAdapter(
 
             removeButton.setOnClickListener {
                 onRemove(position)
+            }
+        }
+        
+        private fun calculateDuration(range: TimeRange): String {
+            val startMinutes = range.startHour * 60 + range.startMinute
+            val endMinutes = range.endHour * 60 + range.endMinute
+            
+            val durationMinutes = if (endMinutes > startMinutes) {
+                endMinutes - startMinutes
+            } else {
+                // Handle overnight duration
+                (24 * 60) - startMinutes + endMinutes
+            }
+            
+            val hours = durationMinutes / 60
+            val minutes = durationMinutes % 60
+            
+            return when {
+                hours == 0 -> "${minutes}m duration"
+                minutes == 0 -> "${hours}h duration"
+                else -> "${hours}h ${minutes}m duration"
             }
         }
     }
