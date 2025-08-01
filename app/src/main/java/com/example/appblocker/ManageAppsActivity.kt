@@ -8,13 +8,14 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.appblocker.adapters.AppListAdapter
 import com.example.appblocker.databinding.ActivityManageAppsBinding
 import com.example.appblocker.dialogs.AppScheduleDialog
 import com.example.appblocker.utils.AppScheduleStorage
-import com.example.appblocker.utils.PinUtils
+import com.example.appblocker.utils.BiometricUtils
 
 class ManageAppsActivity : AppCompatActivity() {
 
@@ -22,9 +23,19 @@ class ManageAppsActivity : AppCompatActivity() {
     private lateinit var adapter: AppListAdapter
     private lateinit var allApps: List<ApplicationInfo>
     private lateinit var blockedApps: MutableSet<String>
+    private var isAuthVerified = false
 
     private val sharedPrefs by lazy {
         getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
+    }
+    
+    private val biometricLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            isAuthVerified = true
+            initializeActivity()
+        } else {
+            finish()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,6 +43,16 @@ class ManageAppsActivity : AppCompatActivity() {
         binding = ActivityManageAppsBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Check biometric authentication first
+        if (BiometricUtils.isBiometricEnabled(this) && !isAuthVerified) {
+            val intent = Intent(this, BiometricAuthActivity::class.java)
+            biometricLauncher.launch(intent)
+        } else {
+            initializeActivity()
+        }
+    }
+    
+    private fun initializeActivity() {
         // Load blocked apps from SharedPreferences
         blockedApps = sharedPrefs.getStringSet("blockedApps", emptySet())!!.toMutableSet()
 
@@ -43,13 +64,47 @@ class ManageAppsActivity : AppCompatActivity() {
             onToggleChanged = { pkg, isBlocked ->
                 if (isBlocked) {
                     blockedApps.add(pkg)
+                    sharedPrefs.edit().putStringSet("blockedApps", blockedApps).apply()
+                    updateStats(allApps.size, blockedApps.size)
+                    
+                    // Broadcast update to other activities
+                    val intent = Intent("com.example.appblocker.STATS_UPDATED")
+                    sendBroadcast(intent)
                 } else {
-                    blockedApps.remove(pkg)
-                    // Remove schedule when app is unblocked
-                    AppScheduleStorage.removeAppSchedule(this, pkg)
+                    // Show confirmation dialog when trying to unblock an app
+                    val appName = try {
+                        packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString()
+                    } catch (e: Exception) {
+                        pkg
+                    }
+                    
+                    androidx.appcompat.app.AlertDialog.Builder(this)
+                        .setTitle("Unblock App?")
+                        .setMessage("Are you sure you want to unblock $appName? This will allow unrestricted access to this app.")
+                        .setPositiveButton("Yes, Unblock") { _, _ ->
+                            // Add 5 minute delay
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                blockedApps.remove(pkg)
+                                AppScheduleStorage.removeAppSchedule(this, pkg)
+                                sharedPrefs.edit().putStringSet("blockedApps", blockedApps).apply()
+                                updateStats(allApps.size, blockedApps.size)
+                                
+                                // Broadcast update to other activities
+                                val intent = Intent("com.example.appblocker.STATS_UPDATED")
+                                sendBroadcast(intent)
+                                
+                                // Refresh adapter to show updated state
+                                adapter.notifyDataSetChanged()
+                                android.widget.Toast.makeText(this, "$appName unblocked", android.widget.Toast.LENGTH_SHORT).show()
+                            }, 300000) // 5 minutes = 300,000 milliseconds
+                            android.widget.Toast.makeText(this, "Unblocking in 5 minutes...", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                        .setNegativeButton("Cancel") { _, _ ->
+                            // Refresh adapter to reset toggle state
+                            adapter.notifyDataSetChanged()
+                        }
+                        .show()
                 }
-                sharedPrefs.edit().putStringSet("blockedApps", blockedApps).apply()
-                updateStats(allApps.size, blockedApps.size)
             },
             onScheduleClicked = { packageName, appName ->
                 showScheduleDialog(packageName, appName)
@@ -62,14 +117,40 @@ class ManageAppsActivity : AppCompatActivity() {
         // Back button functionality
         binding.backButton.setOnClickListener { finish() }
         
-        // Search button functionality (placeholder for now)
-        binding.searchButton.setOnClickListener {
-            // TODO: Implement search functionality
-        }
-
-
+        // Search functionality
+        setupSearchFunctionality()
 
         updateStats(allApps.size, blockedApps.size)
+    }
+
+    private fun setupSearchFunctionality() {
+        // Toggle search bar visibility
+        binding.searchButton.setOnClickListener {
+            if (binding.searchContainer.visibility == android.view.View.GONE) {
+                binding.searchContainer.visibility = android.view.View.VISIBLE
+                binding.searchEditText.requestFocus()
+            } else {
+                binding.searchContainer.visibility = android.view.View.GONE
+                binding.searchEditText.text.clear()
+                filterApps("")
+            }
+        }
+
+        // Clear search
+        binding.clearSearchButton.setOnClickListener {
+            binding.searchEditText.text.clear()
+            binding.searchContainer.visibility = android.view.View.GONE
+            filterApps("")
+        }
+
+        // Search text watcher
+        binding.searchEditText.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                filterApps(s?.toString() ?: "")
+            }
+        })
     }
 
     private fun getUserInstalledApps(): List<ApplicationInfo> {
@@ -169,17 +250,5 @@ class ManageAppsActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        if (PinUtils.isPinSetup(this)) {
-            PinLockActivity.launch(this, this)
-        }
-    }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PinLockActivity.PIN_REQUEST_CODE && resultCode != RESULT_OK) {
-            finish()
-        }
-    }
 }

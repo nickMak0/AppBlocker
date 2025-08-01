@@ -75,7 +75,7 @@
     <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="12dp"
         app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="12dp"
         app:cardElevation="2dp">
@@ -136,26 +136,91 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
+    <!-- Strict Mode Control -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_vertical">
+
+            <!-- Strict Mode Icon -->
+            <FrameLayout
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/circle_bg_secondary">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_block"
+                    android:tint="#EF4444" />
+            </FrameLayout>
+
+            <!-- Strict Mode Content -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Strict Mode"
+                    android:textColor="#1E293B"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="Faster detection and blocking"
+                    android:textColor="#64748B"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- Strict Mode Switch -->
+            <com.google.android.material.materialswitch.MaterialSwitch
+                android:id="@+id/strictModeSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
     <!-- Quick Actions Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
 
-        <!-- Emergency Disable Button -->
+        <!-- Break Mode Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/emergencyDisableButton"
+            android:id="@+id/breakModeButton"
             android:layout_width="0dp"
             android:layout_height="44dp"
             android:layout_weight="1"
-            android:layout_marginEnd="6dp"
-            android:text="Emergency"
-            android:textSize="12sp"
-            android:textColor="#EF4444"
+            android:layout_marginEnd="4dp"
+            android:text="5min Break"
+            android:textSize="11sp"
+            android:textColor="#10B981"
             style="@style/Widget.Material3.Button.TextButton"
             app:cornerRadius="8dp"
             app:strokeWidth="1dp"
-            app:strokeColor="#EF4444" />
+            app:strokeColor="#10B981" />
 
         <!-- Schedule Mode Button -->
         <com.google.android.material.button.MaterialButton
@@ -163,14 +228,30 @@
             android:layout_width="0dp"
             android:layout_height="44dp"
             android:layout_weight="1"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:text="Schedule"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:textColor="#6366F1"
             style="@style/Widget.Material3.Button.TextButton"
             app:cornerRadius="8dp"
             app:strokeWidth="1dp"
             app:strokeColor="#6366F1" />
+
+        <!-- Emergency Disable Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/emergencyDisableButton"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:layout_marginStart="4dp"
+            android:text="Emergency"
+            android:textSize="11sp"
+            android:textColor="#EF4444"
+            style="@style/Widget.Material3.Button.TextButton"
+            app:cornerRadius="8dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#EF4444" />
     </LinearLayout>
 
 </LinearLayout>

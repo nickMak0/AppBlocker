@@ -5,11 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.appblocker.adapters.TimeRangeAdapter
 import com.example.appblocker.model.TimeRange
-import com.example.appblocker.utils.PinUtils
+import com.example.appblocker.utils.BiometricUtils
 import com.example.appblocker.utils.TimeRangeStorage
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
@@ -32,8 +34,18 @@ class ScheduleSettingsActivity : AppCompatActivity() {
     private lateinit var timeRanges: MutableList<TimeRange>
     private val selectedDays = mutableSetOf<Int>()
     private val dayCards = mutableMapOf<Int, MaterialCardView>()
+    private var isAuthVerified = false
     private val prefs by lazy {
         getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
+    }
+    
+    private val biometricLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            isAuthVerified = true
+            initializeActivity()
+        } else {
+            finish()
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,6 +53,16 @@ class ScheduleSettingsActivity : AppCompatActivity() {
         setTheme(R.style.Theme_AppBlocker)
         setContentView(R.layout.activity_schedule_settings)
 
+        // Check biometric authentication first
+        if (BiometricUtils.isBiometricEnabled(this) && !isAuthVerified) {
+            val intent = Intent(this, BiometricAuthActivity::class.java)
+            biometricLauncher.launch(intent)
+        } else {
+            initializeActivity()
+        }
+    }
+    
+    private fun initializeActivity() {
         initViews()
         setupRecyclerView()
         loadSelectedDays()
@@ -101,6 +123,38 @@ class ScheduleSettingsActivity : AppCompatActivity() {
         
         // Load schedule enabled state
         scheduleEnabledSwitch.isChecked = prefs.getBoolean("schedule_enabled", false)
+        updateScheduleStatus()
+    }
+    
+    private fun updateScheduleStatus() {
+        val statusText = findViewById<TextView>(R.id.scheduleStatusText)
+        val isEnabled = scheduleEnabledSwitch.isChecked
+        val hasTimeRanges = timeRanges.isNotEmpty() && timeRanges.any { it.isValid() }
+        val hasDays = selectedDays.isNotEmpty()
+        
+        when {
+            !isEnabled -> statusText.text = "Schedule disabled"
+            !hasDays -> statusText.text = "No days selected"
+            !hasTimeRanges -> statusText.text = "No time ranges set"
+            else -> {
+                val currentTime = System.currentTimeMillis()
+                val isCurrentlyActive = isScheduleActiveNow()
+                statusText.text = if (isCurrentlyActive) "Schedule active now" else "Schedule inactive now"
+            }
+        }
+    }
+    
+    private fun isScheduleActiveNow(): Boolean {
+        val calendar = Calendar.getInstance()
+        val currentDay = calendar.get(Calendar.DAY_OF_WEEK)
+        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val currentMinute = calendar.get(Calendar.MINUTE)
+        
+        if (!selectedDays.contains(currentDay)) return false
+        
+        return timeRanges.any { range ->
+            range.isValid() && range.isTimeInRange(currentHour, currentMinute)
+        }
     }
     
     private fun updateDayCardAppearance(card: MaterialCardView, isSelected: Boolean) {
@@ -124,6 +178,7 @@ class ScheduleSettingsActivity : AppCompatActivity() {
                     selectedDays.add(day)
                 }
                 updateDayCardAppearance(card, !isSelected)
+                updateScheduleStatus()
             }
         }
 
@@ -141,6 +196,7 @@ class ScheduleSettingsActivity : AppCompatActivity() {
             weekdays.forEach { day ->
                 dayCards[day]?.let { card -> updateDayCardAppearance(card, newState) }
             }
+            updateScheduleStatus()
         }
 
         weekendsCard.setOnClickListener {
@@ -157,11 +213,13 @@ class ScheduleSettingsActivity : AppCompatActivity() {
             weekends.forEach { day ->
                 dayCards[day]?.let { card -> updateDayCardAppearance(card, newState) }
             }
+            updateScheduleStatus()
         }
 
         addTimeRangeButton.setOnClickListener {
             timeRanges.add(TimeRange())
             timeRangeAdapter.notifyItemInserted(timeRanges.lastIndex)
+            updateScheduleStatus()
         }
         
         // Also handle empty state add button
@@ -180,6 +238,7 @@ class ScheduleSettingsActivity : AppCompatActivity() {
         
         scheduleEnabledSwitch.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean("schedule_enabled", isChecked).apply()
+            updateScheduleStatus()
         }
     }
 
@@ -205,19 +264,7 @@ class ScheduleSettingsActivity : AppCompatActivity() {
         finish()
     }
 
-    override fun onStart() {
-        super.onStart()
-        if (PinUtils.isPinSetup(this)) {
-            PinLockActivity.launch(this, this)
-        }
-    }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == PinLockActivity.PIN_REQUEST_CODE && resultCode != RESULT_OK) {
-            finish()
-        }
-    }
 
     private fun showTimePicker(index: Int, isStart: Boolean) {
         val range = timeRanges[index]
