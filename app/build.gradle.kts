@@ -64,4 +64,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("androidx.recyclerview:recyclerview:1.3.1")
+    implementation("androidx.biometric:biometric:1.1.0")
 }
