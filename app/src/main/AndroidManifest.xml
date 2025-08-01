@@ -32,10 +32,17 @@
         </activity>
 
         <!-- App Activities -->
+        <activity android:name=".FullUsageActivity" android:exported="false"/>
         <activity android:name=".FullUsageListActivity" android:exported="false"/>
         <activity android:name=".ManageAppsActivity" android:exported="false"/>
         <activity android:name=".ScheduleSettingsActivity" android:exported="false"/>
         <activity android:name=".DashboardActivity" android:exported="false"/>
+        <activity android:name=".SiteBlockerActivity" android:exported="false"/>
+        <activity android:name=".PinLockActivity" android:exported="false"/>
+        <activity android:name=".PinSettingsActivity" android:exported="false"/>
+        <activity android:name=".BiometricAuthActivity" android:exported="false"/>
+        <activity android:name=".BiometricSettingsActivity" android:exported="false"/>
+        <activity android:name=".BreakModeActivity" android:exported="false"/>
 
 
         <!-- Block Screen Activity -->

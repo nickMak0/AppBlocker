@@ -1,6 +1,6 @@
 # 📵 AppBlocker – Stay Focused. Stay in Control.
 
-AppBlocker is a powerful Android utility designed to help you reclaim your focus by **blocking distracting apps and adult websites**. Whether you're working, studying, or simply building digital discipline, AppBlocker is your personal productivity partner.
+AppBlocker is a powerful Android utility designed to help you reclaim your focus by **blocking distracting apps and adult websites**. Whether you're working, studying, or simply building digital discipline, AppBlocker is your personal productivity partner with advanced self-discipline features.
 
 ---
 
@@ -21,6 +21,25 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 | 🎯 Launchable App Filter    | Lists only user-installed apps with launch intent.                         |
 | 💬 Motivational Quotes      | Rotating quotes displayed on the block screen to keep you focused.         |
 | ⏰ Per-App Scheduling       | Set individual time schedules for each blocked app with custom time ranges. |
+| 🔒 Biometric Authentication | Secure access using fingerprint, face, or device password.                 |
+| ⚡ Strict Mode              | Ultra-fast blocking with 200ms response time for maximum effectiveness.     |
+| 🛡️ Self-Discipline Protection | 5-minute delays and confirmations prevent impulsive disabling.           |
+| ⏱️ Break Mode               | Structured 5-minute breaks with automatic re-enabling.                     |
+
+---
+
+## 🛡️ Self-Discipline Features
+
+| Feature                        | Description                                                     |
+|--------------------------------|-----------------------------------------------------------------|
+| ⏰ 5-Minute Disable Delays     | All disable actions require 5-minute wait to prevent impulses  |
+| 🔐 Confirmation Dialogs        | Multiple confirmations required before disabling any feature    |
+| 📱 Biometric Security          | Fingerprint/face/password required to access settings          |
+| ⚡ Strict Mode                 | Ultra-fast 200ms blocking with enhanced detection              |
+| ⏱️ Break Mode                  | Healthy 5-minute breaks with automatic timer and re-enabling   |
+| 🚨 Emergency Override          | 5-second emergency disable for true emergencies only           |
+| 🎯 Smart Schedule Fallback     | Individual app schedules with global schedule fallback         |
+| 📊 Real-Time Stats             | Live tracking of daily blocking events and effectiveness       |
 
 ---
 
@@ -32,6 +51,7 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 ![Block Screen](screenshots/block_screen.png)
 ![Dashboard](screenshots/dashboard_stats.png)
 ![Manage Apps](screenshots/manage_apps.png)
+![Break Mode](screenshots/break_mode.png)
 ```
 
 ---
@@ -41,9 +61,10 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 - **Language:** Kotlin  
 - **Frameworks:** AndroidX, Jetpack  
 - **UI:** Material Components (Material3/You)  
-- **Core APIs:** AccessibilityService, UsageStatsManager, VpnService  
+- **Core APIs:** AccessibilityService, UsageStatsManager, VpnService, BiometricPrompt  
 - **Storage:** SharedPreferences  
-- **Other:** ViewBinding, RecyclerView, Custom Adapters  
+- **Security:** BiometricManager, Device Authentication  
+- **Other:** ViewBinding, RecyclerView, Custom Adapters, CountDownTimer  
 
 ---
 
@@ -57,6 +78,9 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 | 🛠️ MaterialSwitch crash        | ✅ Fixed with correct imports and theme compatibility       |
 | ⏰ Advanced Scheduler          | ✅ Implemented multiple time ranges per app with recurring patterns |
 | 🌐 Website Blocker             | ✅ Extended to blocking adult sites via DNS/VPN            |
+| 🔒 PIN Authentication Issues   | ✅ Replaced with modern biometric authentication system     |
+| ⚡ Blocking Speed              | ✅ Enhanced with strict mode for 200ms ultra-fast blocking  |
+| 🛡️ Easy Bypass Prevention     | ✅ Added 5-minute delays and confirmation dialogs           |
 
 ---
 
@@ -64,12 +88,12 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 
 | Feature               | Description                                   |
 |-----------------------|-----------------------------------------------|
-| 🔐 PIN Lock           | Prevent bypassing or unauthorized changes     |
-| 📅 Scheduler          | Time-based blocking (e.g., 10PM–7AM blocking) |
 | 📈 Advanced Analytics | Visualize daily/weekly app usage trends       |
-| 🔍 App Search         | Search bar in Manage Apps screen              |
 | ☁️ Cloud Sync         | Firebase integration for backups and sync     |
 | 🌐 DoH Support        | DNS-over-HTTPS for more robust web filtering  |
+| 🎯 Focus Sessions     | Pomodoro-style focused work sessions          |
+| 📱 Widget Support     | Home screen widgets for quick stats           |
+| 🔔 Smart Notifications| Intelligent reminders and motivation          |
 
 ---
 
@@ -87,6 +111,16 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 5. When prompted, grant:
    - 🔓 **Usage Access**
    - ♿ **Accessibility Permission**
+   - 🔐 **Biometric Authentication** (optional)
+   - 🌐 **VPN Permission** (for website blocking)
+
+### 🛡️ First-Time Setup
+
+1. **Enable Biometric Security**: Go to Settings → Toggle biometric authentication
+2. **Configure Blocked Apps**: Navigate to Manage Apps → Select apps to block
+3. **Set Schedules**: Use Schedule Settings for time-based blocking
+4. **Enable Strict Mode**: For ultra-fast blocking (optional)
+5. **Test Break Mode**: Try the 5-minute break feature
 
 ---
 
@@ -100,7 +134,7 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
    - Click **Define Remote**
    - Choose **GitHub**
    - Enter repo name → Click **Share**
-6. ✅ You’re live!
+6. ✅ You're live!
 
 ---
 
@@ -110,18 +144,29 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 AppBlocker/
 ├── app/
 │   ├── java/com/example/appblocker/
-│   │   ├── MainActivity.kt
-│   │   ├── BlockScreenActivity.kt
-│   │   ├── ManageAppsActivity.kt
-│   │   └── ...
+│   │   ├── MainActivity.kt                    # Main control interface
+│   │   ├── BlockScreenActivity.kt             # App blocking screen
+│   │   ├── ManageAppsActivity.kt              # App management with delays
+│   │   ├── DashboardActivity.kt               # Usage statistics
+│   │   ├── ScheduleSettingsActivity.kt        # Time-based scheduling
+│   │   ├── BiometricAuthActivity.kt           # Biometric authentication
+│   │   ├── BiometricSettingsActivity.kt       # Security settings
+│   │   ├── BreakModeActivity.kt               # 5-minute break timer
+│   │   ├── AppBlockerAccessibilityService.kt  # Core blocking service
+│   │   └── utils/
+│   │       ├── BiometricUtils.kt              # Biometric helper
+│   │       ├── StatsManager.kt                # Statistics tracking
+│   │       └── AppScheduleChecker.kt          # Schedule validation
 │   ├── res/
-│   │   ├── layout/
-│   │   └── drawable/
+│   │   ├── layout/                            # UI layouts
+│   │   ├── drawable/                          # Icons and graphics
+│   │   └── values/                            # Colors and strings
 │   ├── AndroidManifest.xml
 ├── screenshots/
 │   ├── block_screen.png
 │   ├── dashboard_stats.png
-│   └── manage_apps.png
+│   ├── manage_apps.png
+│   └── break_mode.png
 ├── README.md
 ```
 
@@ -136,10 +181,18 @@ A formal open-source license will be added prior to any public distribution.
 
 ## 🙌 Final Words
 
-> **“Don’t wait for motivation. Act.”**
+> **"Don't wait for motivation. Act."**
 
-AppBlocker is built to help you reclaim your attention, block distractions, and build the discipline required to reach your goals.
+AppBlocker is built to help you reclaim your attention, block distractions, and build the discipline required to reach your goals. With advanced self-discipline features like 5-minute delays, biometric security, and structured break modes, it's designed to work with your psychology, not against it.
+
+### 🎯 Key Principles
+
+- **Friction by Design**: 5-minute delays prevent impulsive decisions
+- **Structured Flexibility**: Break mode provides healthy temporary access
+- **Security First**: Biometric authentication prevents unauthorized changes
+- **Smart Scheduling**: Individual and global schedules work together
+- **Real-Time Feedback**: Live stats show your progress and effectiveness
 
 ---
 
-**Made with 💻 + discipline.**
+**Made with 💻 + discipline + psychology.**
