@@ -1,4 +1,3 @@
-// File: app/src/main/java/com/example/appblocker/DashboardActivity.kt
 package com.example.appblocker
 
 import android.app.AppOpsManager
@@ -16,7 +15,8 @@ import com.example.appblocker.adapters.UsageStatsAdapter
 import com.example.appblocker.databinding.ActivityDashboardBinding
 import com.example.appblocker.model.UsageStatItem
 import com.example.appblocker.utils.StatsManager
-import java.text.SimpleDateFormat
+import android.content.BroadcastReceiver
+import android.content.IntentFilter
 import java.util.*
 import java.util.concurrent.TimeUnit
 
@@ -24,6 +24,14 @@ class DashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var usageStatsAdapter: UsageStatsAdapter
+    
+    // Stats update receiver
+    private val statsReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            android.util.Log.d("DashboardActivity", "Stats update broadcast received")
+            loadLiveStats()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +54,26 @@ class DashboardActivity : AppCompatActivity() {
         super.onResume()
         loadLiveStats()
     }
+    
+    override fun onStart() {
+        super.onStart()
+        loadLiveStats()
+        // Register for stats updates
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(statsReceiver, IntentFilter("com.example.appblocker.STATS_UPDATED"), Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(statsReceiver, IntentFilter("com.example.appblocker.STATS_UPDATED"))
+        }
+    }
+    
+    override fun onStop() {
+        super.onStop()
+        try {
+            unregisterReceiver(statsReceiver)
+        } catch (e: Exception) {
+            // Receiver not registered
+        }
+    }
 
     private fun setupRecyclerView() {
         usageStatsAdapter = UsageStatsAdapter(emptyList(), packageManager)
@@ -65,6 +93,29 @@ class DashboardActivity : AppCompatActivity() {
         binding.backButton.setOnClickListener {
             finish()
         }
+        
+        binding.viewAllUsageButton.setOnClickListener {
+            startActivity(Intent(this, FullUsageActivity::class.java))
+        }
+        
+        // Test functionality - click View All button 3 times quickly to test stats
+        var clickCount = 0
+        var lastClickTime = 0L
+        binding.viewAllUsageButton.setOnClickListener {
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - lastClickTime < 1000) {
+                clickCount++
+                if (clickCount >= 2) {
+                    StatsManager.testIncrementStats(this)
+                    Toast.makeText(this, "Test stats incremented!", Toast.LENGTH_SHORT).show()
+                    clickCount = 0
+                }
+            } else {
+                clickCount = 0
+                startActivity(Intent(this, FullUsageActivity::class.java))
+            }
+            lastClickTime = currentTime
+        }
     }
 
     private fun updateDateText() {
@@ -73,21 +124,20 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun loadLiveStats() {
         try {
+            StatsManager.init(this)
             val appsBlocked = StatsManager.getAppsBlocked(this)
             val sitesBlocked = StatsManager.getSitesBlocked(this)
-            // Streak removed
 
-            // Updated references to direct binding elements
+            android.util.Log.d("DashboardActivity", "Updating stats - Apps Blocked Today: $appsBlocked, Sites Blocked Today: $sitesBlocked")
+            
             binding.appsBlockedCount.text = appsBlocked.toString()
             binding.sitesBlockedCount.text = sitesBlocked.toString()
-            // Focus time removed - redundant metric
-            // Streak removed - not meaningful for app blocker
 
             updateScreenTime()
-
         } catch (e: Exception) {
-            Log.e("DashboardActivity", "Error loading live stats", e)
-            showDefaultStatsFallback()
+            Log.e("DashboardActivity", "Error loading stats", e)
+            binding.appsBlockedCount.text = "0"
+            binding.sitesBlockedCount.text = "0"
         }
     }
 
@@ -143,7 +193,7 @@ class DashboardActivity : AppCompatActivity() {
             UsageStatItem(app.packageName, appName, minutesUsed)
         }.sortedByDescending { it.minutesUsed }.take(15)
 
-        usageStatsAdapter.updateData(usageItems)
+        usageStatsAdapter.updateData(usageItems.filter { it.minutesUsed > 0 }.take(10))
     }
 
     private fun getLaunchableApps(): List<ApplicationInfo> {
@@ -179,10 +229,5 @@ class DashboardActivity : AppCompatActivity() {
 
     // Removed getBlockedAppsCount - no longer needed
 
-    private fun showDefaultStatsFallback() {
-        binding.appsBlockedCount.text = "0"
-        binding.sitesBlockedCount.text = "0"
-        // Focus time removed
-        // Streak removed
-    }
+
 }
