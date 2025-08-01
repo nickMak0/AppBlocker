@@ -17,12 +17,14 @@ import java.util.*
 class AppBlockerAccessibilityService : AccessibilityService() {
 
     private val blockInterval = 1000L // Reduced from 1500ms to 1000ms for faster response
+    private val strictBlockInterval = 200L // Ultra-fast blocking in strict mode
     private var lastBlockedPackage: String? = null
     private var lastBlockTime: Long = 0L
     
     // Cache preferences for better performance
     private var cachedBlockedApps: Set<String> = emptySet()
     private var cachedBlockingEnabled: Boolean = true
+    private var cachedStrictMode: Boolean = false
     private var lastPrefsUpdate: Long = 0L
     private val prefsCacheTimeout = 5000L // 5 seconds cache
 
@@ -32,6 +34,7 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             val prefs = getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
             cachedBlockedApps = prefs.getStringSet("blockedApps", emptySet()) ?: emptySet()
             cachedBlockingEnabled = prefs.getBoolean("blocking_enabled", true)
+            cachedStrictMode = prefs.getBoolean("strict_mode_enabled", false)
             lastPrefsUpdate = currentTime
         }
     }
@@ -45,6 +48,13 @@ class AppBlockerAccessibilityService : AccessibilityService() {
         if (!cachedBlockingEnabled) {
             return
         }
+        
+        // Check if break mode is active
+        val prefs = getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
+        val isBreakModeActive = prefs.getBoolean("break_mode_active", false)
+        if (isBreakModeActive) {
+            return
+        }
 
         val currentPackage = event.packageName.toString()
 
@@ -53,10 +63,20 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             val hasIndividualSchedule = AppScheduleChecker.hasAppSchedule(this, currentPackage)
             val shouldBlock = if (hasIndividualSchedule) {
                 // Use individual app schedule
-                AppScheduleChecker.isAppBlockedBySchedule(this, currentPackage)
+                val blocked = AppScheduleChecker.isAppBlockedBySchedule(this, currentPackage)
+                Log.d("ACCESS_SERVICE", "App $currentPackage has individual schedule, blocked: $blocked")
+                blocked
             } else {
-                // Fall back to global schedule
-                isWithinScheduledTime()
+                // Fall back to global schedule - if no global schedule, block always
+                val prefs = getSharedPreferences("AppBlockerPrefs", Context.MODE_PRIVATE)
+                val isScheduleEnabled = prefs.getBoolean("schedule_enabled", false)
+                val blocked = if (isScheduleEnabled) {
+                    isWithinScheduledTime()
+                } else {
+                    true // No schedule means block always
+                }
+                Log.d("ACCESS_SERVICE", "App $currentPackage using global schedule, enabled: $isScheduleEnabled, blocked: $blocked")
+                blocked
             }
             
             if (!shouldBlock) {
@@ -64,8 +84,11 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             }
             val currentTime = System.currentTimeMillis()
 
+            // Strict mode uses faster blocking interval
+            val interval = if (cachedStrictMode) strictBlockInterval else blockInterval
+            
             // Avoid rapid repeat blocking
-            if (currentPackage == lastBlockedPackage && currentTime - lastBlockTime < blockInterval) {
+            if (currentPackage == lastBlockedPackage && currentTime - lastBlockTime < interval) {
                 return
             }
 
@@ -80,8 +103,19 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             // Launch block screen immediately
             val blockIntent = Intent(this, BlockScreenActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+                putExtra("strict_mode", cachedStrictMode)
             }
             startActivity(blockIntent)
+            
+            // In strict mode, also try to force close the app
+            if (cachedStrictMode) {
+                try {
+                    val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+                    activityManager.killBackgroundProcesses(currentPackage)
+                } catch (e: Exception) {
+                    Log.w("ACCESS_SERVICE", "Could not kill background process: ${e.message}")
+                }
+            }
         }
     }
 
@@ -99,7 +133,7 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC
             flags = AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
                     AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
-            notificationTimeout = 25 // Further reduced for ultra-fast detection
+            notificationTimeout = 10 // Ultra-fast detection for strict mode
         }
 
         Log.d("ACCESS_SERVICE", "AppBlocker Accessibility Service connected.")
@@ -111,24 +145,36 @@ class AppBlockerAccessibilityService : AccessibilityService() {
         val timeRangesJson = prefs.getString("time_ranges", null)
         val savedDaysSet = prefs.getStringSet("schedule_days_of_week", null)
 
+        // If no days selected, don't block based on schedule
         if (savedDaysSet.isNullOrEmpty()) {
+            Log.d("ACCESS_SERVICE", "No days selected in global schedule")
             return false
         }
 
         val selectedDays = savedDaysSet.mapNotNull { it.toIntOrNull() }.toSet()
         val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK)
 
+        // If today is not in selected days, don't block
         if (!selectedDays.contains(currentDay)) {
+            Log.d("ACCESS_SERVICE", "Current day $currentDay not in selected days $selectedDays")
             return false
         }
 
         val timeRanges: List<TimeRange> = try {
             timeRangesJson?.let { TimeRangeStorage.deserialize(it) } ?: emptyList()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("ACCESS_SERVICE", "Error deserializing time ranges", e)
             return false
         }
 
-        return TimeUtils.isInAnyRange(timeRanges)
+        // If no time ranges, don't block
+        if (timeRanges.isEmpty()) {
+            Log.d("ACCESS_SERVICE", "No time ranges in global schedule")
+            return false
+        }
+
+        val isInRange = TimeUtils.isInAnyRange(timeRanges)
+        Log.d("ACCESS_SERVICE", "Current time in global schedule range: $isInRange")
+        return isInRange
     }
 }

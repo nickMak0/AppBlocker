@@ -31,6 +31,19 @@
         android:paddingBottom="24dp"
         android:textAlignment="center" />
 
+    <!-- Strict Mode Text -->
+    <TextView
+        android:id="@+id/strictModeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Strict Mode: Ultra-fast blocking active"
+        android:textColor="#EF4444"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:paddingBottom="16dp"
+        android:textAlignment="center"
+        android:visibility="gone" />
+
     <!-- Close Button -->
     <Button
         android:id="@+id/closeButton"

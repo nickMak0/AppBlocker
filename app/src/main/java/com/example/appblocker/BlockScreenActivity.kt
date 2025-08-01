@@ -14,6 +14,7 @@ class BlockScreenActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityBlockScreenBinding
     private val executor = Executors.newSingleThreadExecutor()
+    private var isStrictMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,8 +31,18 @@ class BlockScreenActivity : AppCompatActivity() {
         )
 
         hideSystemUI()
-
-        // Show close button immediately
+        
+        // Check if strict mode is enabled (for display purposes only)
+        isStrictMode = intent.getBooleanExtra("strict_mode", false)
+        
+        if (isStrictMode) {
+            binding.strictModeText.visibility = View.VISIBLE
+            binding.strictModeText.text = "Strict Mode: Ultra-fast blocking active"
+        } else {
+            binding.strictModeText.visibility = View.GONE
+        }
+        
+        // Always show close button immediately
         binding.closeButton.visibility = View.VISIBLE
         binding.closeButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_MAIN).apply {
@@ -67,7 +78,13 @@ class BlockScreenActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        // Do nothing to block back
+        // Always allow back to home screen
+        val intent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_HOME)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        startActivity(intent)
+        finish()
     }
 
     private fun hideSystemUI() {
