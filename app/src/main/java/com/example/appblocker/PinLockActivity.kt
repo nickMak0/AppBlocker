@@ -72,11 +72,13 @@ class PinLockActivity : AppCompatActivity() {
     }
 
     private fun handlePinVerification(pin: String) {
+        android.util.Log.d("PinLockActivity", "Verifying PIN: $pin")
         if (PinUtils.verifyPin(this, pin)) {
+            android.util.Log.d("PinLockActivity", "PIN verification successful")
             Toast.makeText(this, "Access granted", Toast.LENGTH_SHORT).show()
-            Toast.makeText(this, "Saved PIN. isPinSetup = ${PinUtils.isPinSetup(this)}", Toast.LENGTH_LONG).show()
             finishWithSuccess()
         } else {
+            android.util.Log.d("PinLockActivity", "PIN verification failed")
             Toast.makeText(this, "Incorrect PIN", Toast.LENGTH_SHORT).show()
             pinEditText.text.clear()
         }
@@ -89,10 +91,5 @@ class PinLockActivity : AppCompatActivity() {
 
     companion object {
         const val PIN_REQUEST_CODE = 101
-
-        fun launch(context: Context, activity: AppCompatActivity) {
-            val intent = Intent(context, PinLockActivity::class.java)
-            activity.startActivityForResult(intent, PIN_REQUEST_CODE)
-        }
     }
 }
