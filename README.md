@@ -23,6 +23,8 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 | ⏰ Per-App Scheduling       | Set individual time schedules for each blocked app with custom time ranges. |
 | 🔒 Biometric Authentication | Secure access using fingerprint, face, or device password.                 |
 | ⚡ Strict Mode              | Ultra-fast blocking with 200ms response time for maximum effectiveness.     |
+| 🎨 Enhanced Block Screen    | Beautiful motivational quotes and clean UI when apps are blocked.           |
+| 📅 Advanced Scheduling      | Multiple time ranges per app with weekday/weekend quick selection.          |
 | 🛡️ Self-Discipline Protection | 5-minute delays and confirmations prevent impulsive disabling.           |
 | ⏱️ Break Mode               | Structured 5-minute breaks with automatic re-enabling.                     |
 
@@ -36,6 +38,8 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 | 🔐 Confirmation Dialogs        | Multiple confirmations required before disabling any feature    |
 | 📱 Biometric Security          | Fingerprint/face/password required to access settings          |
 | ⚡ Strict Mode                 | Ultra-fast 200ms blocking with enhanced detection              |
+| 🎨 Motivational Block Screen   | Inspiring quotes and clean design to maintain focus            |
+| 📅 Flexible Time Scheduling    | Multiple time ranges per app with smart day selection          |
 | ⏱️ Break Mode                  | Healthy 5-minute breaks with automatic timer and re-enabling   |
 | 🚨 Emergency Override          | 5-second emergency disable for true emergencies only           |
 | 🎯 Smart Schedule Fallback     | Individual app schedules with global schedule fallback         |
@@ -81,6 +85,8 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 | 🔒 PIN Authentication Issues   | ✅ Replaced with modern biometric authentication system     |
 | ⚡ Blocking Speed              | ✅ Enhanced with strict mode for 200ms ultra-fast blocking  |
 | 🛡️ Easy Bypass Prevention     | ✅ Added 5-minute delays and confirmation dialogs           |
+| 🎨 Block Screen Enhancement    | ✅ Added 160+ motivational quotes with beautiful UI design   |
+| 📅 Advanced App Scheduling     | ✅ Multiple time ranges per app with enhanced dialog system  |
 
 ---
 

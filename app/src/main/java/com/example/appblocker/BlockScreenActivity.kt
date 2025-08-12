@@ -35,12 +35,8 @@ class BlockScreenActivity : AppCompatActivity() {
         // Check if strict mode is enabled (for display purposes only)
         isStrictMode = intent.getBooleanExtra("strict_mode", false)
         
-        if (isStrictMode) {
-            binding.strictModeText.visibility = View.VISIBLE
-            binding.strictModeText.text = "Strict Mode: Ultra-fast blocking active"
-        } else {
-            binding.strictModeText.visibility = View.GONE
-        }
+        // Always hide strict mode text
+        binding.strictModeText.visibility = View.GONE
         
         // Always show close button immediately
         binding.closeButton.visibility = View.VISIBLE
