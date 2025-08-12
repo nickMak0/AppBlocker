@@ -9,7 +9,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.appblocker.databinding.ItemAppToggleBinding
 import com.example.appblocker.utils.AppScheduleStorage
-import java.text.SimpleDateFormat
 import java.util.*
 
 class AppListAdapter(
@@ -67,18 +66,53 @@ class AppListAdapter(
             val schedule = AppScheduleStorage.getAppSchedule(context, packageName)
             if (schedule != null && schedule.isEnabled && schedule.timeRanges.isNotEmpty()) {
                 binding.scheduleText.visibility = View.VISIBLE
-                val timeRange = schedule.timeRanges.first()
-                val startTime = String.format("%02d:%02d", timeRange.startHour, timeRange.startMinute)
-                val endTime = String.format("%02d:%02d", timeRange.endHour, timeRange.endMinute)
-                val duration = calculateDuration(timeRange.startHour, timeRange.startMinute, timeRange.endHour, timeRange.endMinute)
-                val daysText = if (schedule.daysOfWeek.size == 7) "Daily" else "${schedule.daysOfWeek.size} days"
-                binding.scheduleText.text = "$startTime - $endTime ($duration, $daysText)"
+                
+                val validRanges = schedule.timeRanges.filter { it.isValid() }
+                if (validRanges.isNotEmpty()) {
+                    val rangeCount = validRanges.size
+                    val daysText = getDaysText(schedule.daysOfWeek)
+                    val isCurrentlyActive = isScheduleActiveNow(schedule)
+                    val statusText = if (isCurrentlyActive) "Active now" else "Inactive"
+                    
+                    if (rangeCount == 1) {
+                        val timeRange = validRanges.first()
+                        val startTime = String.format("%02d:%02d", timeRange.startHour, timeRange.startMinute)
+                        val endTime = String.format("%02d:%02d", timeRange.endHour, timeRange.endMinute)
+                        binding.scheduleText.text = "$startTime - $endTime • $daysText • $statusText"
+                    } else {
+                        binding.scheduleText.text = "$rangeCount time ranges • $daysText • $statusText"
+                    }
+                } else {
+                    binding.scheduleText.text = "No valid time ranges"
+                }
             } else {
                 binding.scheduleText.visibility = View.GONE
             }
         } else {
             binding.scheduleButton.visibility = View.GONE
             binding.scheduleText.visibility = View.GONE
+        }
+    }
+    
+    private fun getDaysText(daysOfWeek: Set<Int>): String {
+        return when {
+            daysOfWeek.size == 7 -> "Daily"
+            daysOfWeek.containsAll(listOf(2, 3, 4, 5, 6)) && daysOfWeek.size == 5 -> "Weekdays"
+            daysOfWeek.containsAll(listOf(1, 7)) && daysOfWeek.size == 2 -> "Weekends"
+            else -> "${daysOfWeek.size} days"
+        }
+    }
+    
+    private fun isScheduleActiveNow(schedule: com.example.appblocker.model.AppSchedule): Boolean {
+        val calendar = Calendar.getInstance()
+        val currentDay = calendar.get(Calendar.DAY_OF_WEEK)
+        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val currentMinute = calendar.get(Calendar.MINUTE)
+        
+        if (!schedule.daysOfWeek.contains(currentDay)) return false
+        
+        return schedule.timeRanges.any { range ->
+            range.isValid() && range.isTimeInRange(currentHour, currentMinute)
         }
     }
 

@@ -10,9 +10,9 @@ import com.example.appblocker.R
 import com.example.appblocker.model.TimeRange
 
 class TimeRangeAdapter(
-    private val timeRanges: List<TimeRange>,
+    private val timeRanges: MutableList<TimeRange>,
     private val onRemove: (Int) -> Unit,
-    private val onTimeClick: (Int, Boolean) -> Unit // <-- new param for clock click
+    private val onTimeClick: (Int, Boolean) -> Unit
 ) : RecyclerView.Adapter<TimeRangeAdapter.ViewHolder>() {
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

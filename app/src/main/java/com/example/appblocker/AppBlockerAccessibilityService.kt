@@ -60,10 +60,10 @@ class AppBlockerAccessibilityService : AccessibilityService() {
 
         if (cachedBlockedApps.contains(currentPackage)) {
             // Check individual app schedule first, then fall back to global schedule
-            val hasIndividualSchedule = AppScheduleChecker.hasAppSchedule(this, currentPackage)
-            val shouldBlock = if (hasIndividualSchedule) {
+            val individualSchedule = com.example.appblocker.utils.AppScheduleStorage.getAppSchedule(this, currentPackage)
+            val shouldBlock = if (individualSchedule != null && individualSchedule.isEnabled) {
                 // Use individual app schedule
-                val blocked = AppScheduleChecker.isAppBlockedBySchedule(this, currentPackage)
+                val blocked = AppScheduleChecker.isScheduleActive(individualSchedule)
                 Log.d("ACCESS_SERVICE", "App $currentPackage has individual schedule, blocked: $blocked")
                 blocked
             } else {
