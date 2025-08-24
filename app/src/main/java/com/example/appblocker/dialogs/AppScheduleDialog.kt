@@ -37,7 +37,8 @@ object AppScheduleDialog {
         
         dialogTitle.text = "Schedule for $appName"
         
-        val timeRanges = mutableListOf<TimeRange>()
+    val MAX_TIME_RANGES = 10
+    val timeRanges = mutableListOf<TimeRange>()
         val selectedDays = mutableSetOf<Int>()
         lateinit var adapter: TimeRangeAdapter
         
@@ -108,6 +109,7 @@ object AppScheduleDialog {
                 emptyTimeRangesText.visibility = android.view.View.GONE
                 timeRangesRecyclerView.visibility = android.view.View.VISIBLE
             }
+            addTimeRangeButton.isEnabled = timeRanges.size < MAX_TIME_RANGES
             adapter.notifyDataSetChanged()
             updateSelectedDays()
             updateScheduleStatus()
@@ -176,6 +178,10 @@ object AppScheduleDialog {
         
         // Add time range button
         addTimeRangeButton.setOnClickListener {
+            if (timeRanges.size >= MAX_TIME_RANGES) {
+                Toast.makeText(context, "You can add up to $MAX_TIME_RANGES time ranges only", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             timeRanges.add(TimeRange())
             updateUI()
         }
