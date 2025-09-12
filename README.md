@@ -46,20 +46,6 @@ AppBlocker is a powerful Android utility designed to help you reclaim your focus
 | 📊 Real-Time Stats             | Live tracking of daily blocking events and effectiveness       |
 
 ---
-
-## 📸 Screenshots
-
-> *(Add your own screenshots in `/screenshots` folder)*
-
-```markdown
-![Block Screen](screenshots/block_screen.png)
-![Dashboard](screenshots/dashboard_stats.png)
-![Manage Apps](screenshots/manage_apps.png)
-![Break Mode](screenshots/break_mode.png)
-```
-
----
-
 ## 🏗 Tech Stack
 
 - **Language:** Kotlin  
