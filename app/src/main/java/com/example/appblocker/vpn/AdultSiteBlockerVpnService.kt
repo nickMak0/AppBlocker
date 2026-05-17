@@ -5,8 +5,6 @@ import android.content.Intent
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import com.example.appblocker.utils.DnsFilter
-import com.example.appblocker.utils.StatsManager
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.net.DatagramPacket
@@ -19,18 +17,14 @@ class AdultSiteBlockerVpnService : VpnService() {
 
     private var vpnInterface: ParcelFileDescriptor? = null
     private val isRunning = AtomicBoolean(false)
-    private lateinit var dnsFilter: DnsFilter
 
-    override fun onCreate() {
-        super.onCreate()
-        dnsFilter = DnsFilter(this)
-    }
+    // Cloudflare Family DNS — blocks adult content natively, no custom filtering needed
+    private val CLOUDFLARE_FAMILY_PRIMARY   = "1.1.1.3"
+    private val CLOUDFLARE_FAMILY_SECONDARY = "1.0.0.3"
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand called, isRunning=${isRunning.get()}")
-        if (!isRunning.get()) {
-            setupVpn()
-        }
+        Log.d(TAG, "onStartCommand")
+        if (!isRunning.get()) setupVpn()
         return START_STICKY
     }
 
@@ -38,207 +32,143 @@ class AdultSiteBlockerVpnService : VpnService() {
         try {
             val builder = Builder()
                 .setSession("AppBlocker VPN")
-                .addAddress("10.0.0.2", 24)
-                .addDnsServer("10.0.0.1")
-                .addRoute("10.0.0.0", 24)
+                .addAddress("10.0.0.2", 32)
+                // Tell Android to use Cloudflare Family DNS
+                .addDnsServer(CLOUDFLARE_FAMILY_PRIMARY)
+                .addDnsServer(CLOUDFLARE_FAMILY_SECONDARY)
+                // Route ONLY the Cloudflare DNS IPs through the tunnel
+                // so regular internet traffic is completely unaffected
+                .addRoute(CLOUDFLARE_FAMILY_PRIMARY, 32)
+                .addRoute(CLOUDFLARE_FAMILY_SECONDARY, 32)
                 .setMtu(1500)
                 .setBlocking(true)
 
-            try { builder.addDisallowedApplication(packageName) } catch (e: Exception) {
-                Log.w(TAG, "Could not exclude own app: ${e.message}")
-            }
+            try { builder.addDisallowedApplication(packageName) } catch (e: Exception) {}
 
             vpnInterface = builder.establish()
             if (vpnInterface == null) {
-                Log.e(TAG, "Failed to establish VPN interface")
+                Log.e(TAG, "Failed to establish VPN")
                 return
             }
 
             isRunning.set(true)
             vpnRunning = true
             Thread { processPackets() }.start()
-            Log.d(TAG, "VPN started successfully")
+            Log.d(TAG, "VPN started — Cloudflare Family DNS active")
 
         } catch (e: Exception) {
-            Log.e(TAG, "VPN setup failed: ${e.message}", e)
+            Log.e(TAG, "VPN setup error: ${e.message}", e)
         }
     }
 
+    /**
+     * Reads DNS packets from the tun interface and forwards them to
+     * Cloudflare Family DNS (1.1.1.3) via a protected socket.
+     * Cloudflare Family automatically blocks adult/malicious content.
+     * No custom filtering needed — just proxy the packets.
+     */
     private fun processPackets() {
-        val vpnFd = vpnInterface ?: return
-        val vpnInput = FileInputStream(vpnFd.fileDescriptor)
-        val vpnOutput = FileOutputStream(vpnFd.fileDescriptor)
+        val input  = FileInputStream(vpnInterface!!.fileDescriptor)
+        val output = FileOutputStream(vpnInterface!!.fileDescriptor)
         val buffer = ByteArray(32767)
-
-        Log.d(TAG, "Packet processing loop started")
 
         while (isRunning.get()) {
             try {
-                val length = vpnInput.read(buffer)
+                val length = input.read(buffer)
                 if (length <= 0) continue
                 val packet = buffer.copyOf(length)
-                if (isDnsQuery(packet)) {
-                    handleDnsPacket(packet, vpnOutput)
+                if (isUdpDnsPacket(packet)) {
+                    forwardToCloudflareFamily(packet, output)
                 }
             } catch (e: Exception) {
-                if (isRunning.get()) Log.e(TAG, "Packet processing error: ${e.message}")
+                if (isRunning.get()) Log.e(TAG, "Packet error: ${e.message}")
             }
         }
-
-        Log.d(TAG, "Packet processing loop ended")
     }
 
-    private fun isDnsQuery(packet: ByteArray): Boolean {
+    /** Check if this is an IPv4 UDP packet on port 53 */
+    private fun isUdpDnsPacket(packet: ByteArray): Boolean {
         if (packet.size < 28) return false
-        val version = (packet[0].toInt() and 0xFF) shr 4
-        if (version != 4) return false
-        val protocol = packet[9].toInt() and 0xFF
-        if (protocol != 17) return false
-
-        if ((packet[16].toInt() and 0xFF) != 10) return false
-        if ((packet[17].toInt() and 0xFF) != 0)  return false
-        if ((packet[18].toInt() and 0xFF) != 0)  return false
-        if ((packet[19].toInt() and 0xFF) != 1)  return false
-
+        if ((packet[0].toInt() and 0xFF) shr 4 != 4) return false  // IPv4
+        if (packet[9].toInt() and 0xFF != 17) return false          // UDP
         val ihl = (packet[0].toInt() and 0x0F) * 4
-        if (packet.size < ihl + 8) return false
         val dstPort = ((packet[ihl + 2].toInt() and 0xFF) shl 8) or (packet[ihl + 3].toInt() and 0xFF)
         return dstPort == 53
     }
 
-    private fun handleDnsPacket(packet: ByteArray, output: FileOutputStream) {
-        val ihl = (packet[0].toInt() and 0x0F) * 4
-        val clientPort = ((packet[ihl].toInt() and 0xFF) shl 8) or (packet[ihl + 1].toInt() and 0xFF)
-        val dnsPayload = packet.copyOfRange(ihl + 8, packet.size)
-
-        val domain = parseDnsQuery(dnsPayload)
-        if (domain == null) {
-            Log.w(TAG, "Could not parse DNS domain from query")
-            return
-        }
-
-        Log.d(TAG, "DNS query for: $domain")
-
-        if (dnsFilter.shouldBlockDomain(domain)) {
-            Log.d(TAG, "BLOCKING: $domain")
-            StatsManager.incrementSitesBlocked(this)
-            val response = buildBlockedResponse(dnsPayload, clientPort)
-            synchronized(output) { output.write(response) }
-        } else {
-            forwardAndRespond(dnsPayload, clientPort, output)
-        }
-    }
-
-    private fun parseDnsQuery(dnsData: ByteArray): String? {
-        return try {
-            if (dnsData.size < 12) return null
-            val domain = StringBuilder()
-            var pos = 12
-            while (pos < dnsData.size) {
-                val labelLen = dnsData[pos].toInt() and 0xFF
-                if (labelLen == 0) break
-                if (pos + 1 + labelLen > dnsData.size) return null
-                if (domain.isNotEmpty()) domain.append('.')
-                pos++
-                repeat(labelLen) {
-                    domain.append((dnsData[pos + it].toInt() and 0xFF).toChar())
-                }
-                pos += labelLen
-            }
-            domain.toString().lowercase().ifEmpty { null }
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun buildBlockedResponse(dnsQuery: ByteArray, clientPort: Int): ByteArray {
-        val dnsResponse = dnsQuery.copyOf()
-        dnsResponse[2] = (dnsResponse[2].toInt() or 0x80).toByte()
-        dnsResponse[3] = ((dnsResponse[3].toInt() and 0xF0) or 0x03).toByte()
-        dnsResponse[6] = 0
-        dnsResponse[7] = 0
-
-        return buildIpUdpPacket(
-            srcIp   = byteArrayOf(10, 0, 0, 1),
-            dstIp   = byteArrayOf(10, 0, 0, 2),
-            srcPort = 53,
-            dstPort = clientPort,
-            payload = dnsResponse
-        )
-    }
-
-    private fun forwardAndRespond(dnsQuery: ByteArray, clientPort: Int, output: FileOutputStream) {
+    /**
+     * Forwards the DNS query to Cloudflare Family DNS (1.1.1.3) using a
+     * protect()ed socket (bypasses VPN to avoid infinite loop), then writes
+     * the response back into the tun interface so Android gets its answer.
+     */
+    private fun forwardToCloudflareFamily(packet: ByteArray, output: FileOutputStream) {
         Thread {
             try {
+                val ihl       = (packet[0].toInt() and 0x0F) * 4
+                val srcPort   = ((packet[ihl].toInt() and 0xFF) shl 8) or (packet[ihl + 1].toInt() and 0xFF)
+                val deviceIp  = packet.copyOfRange(12, 16)  // original source IP
+                val dnsPayload = packet.copyOfRange(ihl + 8, packet.size)
+
                 val socket = DatagramSocket()
-                protect(socket) // CRITICAL: prevents infinite VPN routing loop
-
-                val upstream = InetAddress.getByName("1.1.1.1")
+                protect(socket)  // bypass VPN routing — critical!
                 socket.soTimeout = 5000
-                socket.send(DatagramPacket(dnsQuery, dnsQuery.size, upstream, 53))
 
-                val responseBuf = ByteArray(1024)
-                val responsePacket = DatagramPacket(responseBuf, responseBuf.size)
-                socket.receive(responsePacket)
+                // Send to Cloudflare Family — it handles adult site blocking
+                val cloudflare = InetAddress.getByName(CLOUDFLARE_FAMILY_PRIMARY)
+                socket.send(DatagramPacket(dnsPayload, dnsPayload.size, cloudflare, 53))
+
+                val buf = ByteArray(1024)
+                val resp = DatagramPacket(buf, buf.size)
+                socket.receive(resp)
                 socket.close()
 
-                val dnsResponse = responsePacket.data.copyOf(responsePacket.length)
+                // Wrap response in IP+UDP and send back through tun
+                val responseData = resp.data.copyOf(resp.length)
+                val cloudflareIp = cloudflare.address  // 1.1.1.3 as bytes
                 val ipPacket = buildIpUdpPacket(
-                    srcIp   = byteArrayOf(10, 0, 0, 1),
-                    dstIp   = byteArrayOf(10, 0, 0, 2),
+                    srcIp   = cloudflareIp,
+                    dstIp   = deviceIp,
                     srcPort = 53,
-                    dstPort = clientPort,
-                    payload = dnsResponse
+                    dstPort = srcPort,
+                    payload = responseData
                 )
                 synchronized(output) { output.write(ipPacket) }
 
             } catch (e: Exception) {
-                Log.e(TAG, "DNS forwarding error: ${e.message}")
+                Log.e(TAG, "Forward to Cloudflare failed: ${e.message}")
             }
         }.start()
     }
 
     private fun buildIpUdpPacket(
-        srcIp: ByteArray,
-        dstIp: ByteArray,
-        srcPort: Int,
-        dstPort: Int,
-        payload: ByteArray
+        srcIp: ByteArray, dstIp: ByteArray,
+        srcPort: Int, dstPort: Int, payload: ByteArray
     ): ByteArray {
         val udpLen = 8 + payload.size
         val ipLen  = 20 + udpLen
         val buf    = ByteBuffer.allocate(ipLen)
 
-        buf.put(0x45.toByte())
-        buf.put(0x00.toByte())
+        buf.put(0x45.toByte()); buf.put(0)
         buf.putShort(ipLen.toShort())
-        buf.putShort(0x0000.toShort())
-        buf.putShort(0x4000.toShort())
-        buf.put(0x40.toByte())
-        buf.put(17.toByte())
-        buf.putShort(0x0000.toShort())
-        buf.put(srcIp)
-        buf.put(dstIp)
+        buf.putShort(0); buf.putShort(0x4000.toShort())
+        buf.put(0x40.toByte()); buf.put(17)
+        buf.putShort(0); buf.put(srcIp); buf.put(dstIp)
 
-        val checksum = ipv4Checksum(buf.array(), 0, 20)
-        buf.array()[10] = (checksum shr 8).toByte()
-        buf.array()[11] = checksum.toByte()
+        val cs = ipv4Checksum(buf.array(), 0, 20)
+        buf.array()[10] = (cs shr 8).toByte()
+        buf.array()[11] = cs.toByte()
 
-        buf.putShort(srcPort.toShort())
-        buf.putShort(dstPort.toShort())
-        buf.putShort(udpLen.toShort())
-        buf.putShort(0x0000.toShort())
+        buf.putShort(srcPort.toShort()); buf.putShort(dstPort.toShort())
+        buf.putShort(udpLen.toShort()); buf.putShort(0)
         buf.put(payload)
 
         return buf.array()
     }
 
     private fun ipv4Checksum(data: ByteArray, offset: Int, length: Int): Int {
-        var sum = 0
-        var i = offset
+        var sum = 0; var i = offset
         while (i < offset + length - 1) {
-            sum += ((data[i].toInt() and 0xFF) shl 8) or (data[i + 1].toInt() and 0xFF)
-            i += 2
+            sum += ((data[i].toInt() and 0xFF) shl 8) or (data[i + 1].toInt() and 0xFF); i += 2
         }
         if (length % 2 != 0) sum += (data[offset + length - 1].toInt() and 0xFF) shl 8
         while (sum shr 16 != 0) sum = (sum and 0xFFFF) + (sum shr 16)
@@ -251,14 +181,13 @@ class AdultSiteBlockerVpnService : VpnService() {
         try { vpnInterface?.close() } catch (e: Exception) {}
         vpnInterface = null
         super.onDestroy()
-        Log.d(TAG, "VPN service destroyed")
+        Log.d(TAG, "VPN stopped")
     }
 
     companion object {
         private const val TAG = "AdultSiteBlockerVPN"
 
-        @Volatile
-        var vpnRunning: Boolean = false
+        @Volatile var vpnRunning = false
             private set
 
         fun prepareIntent(context: Context): Intent? = prepare(context)
