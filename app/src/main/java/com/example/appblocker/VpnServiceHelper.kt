@@ -50,9 +50,6 @@ object VpnServiceHelper {
     }
 
     fun isVpnServiceRunning(context: Context): Boolean {
-        // This is a simple check; a more robust check might involve
-        // checking the service's own state or using a Binder.
-        // For now, we assume if VpnService.prepare returns null, it's running.
-        return VpnService.prepare(context) == null
+        return AdultSiteBlockerVpnService.vpnRunning
     }
 }
